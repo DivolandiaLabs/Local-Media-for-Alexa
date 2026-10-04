@@ -467,7 +467,7 @@ class Library:
         return self.db.one(
             "SELECT COUNT(*) tracks, COUNT(DISTINCT album_key) albums, "
             "COUNT(DISTINCT n_artist) artists, COUNT(DISTINCT n_genre) genres, "
-            "COALESCE(SUM(duration),0) seconds FROM tracks")
+            "COALESCE(SUM(duration),0) seconds FROM tracks WHERE source<>'radio'")
 
     ORDER_ALBUM = "COALESCE(disc_no,1), COALESCE(track_no,9999), n_title"
 
@@ -477,7 +477,7 @@ class Library:
             "MIN(id) sample FROM tracks WHERE n_artist<>'' GROUP BY n_artist ORDER BY n_artist")
 
     def albums(self, n_artist=None, n_genre=None, order="name"):
-        where, args = [], []
+        where, args = ["source<>'radio'"], []   # las radios tienen su propio apartado
         if n_artist:
             where.append("(n_artist=? OR n_album_artist=?)")
             args += [n_artist, n_artist]
@@ -503,7 +503,8 @@ class Library:
 
     def genres(self):
         return self.db.q("SELECT genre name, n_genre n, COUNT(*) tracks, MIN(id) sample "
-                         "FROM tracks WHERE n_genre<>'' GROUP BY n_genre ORDER BY n_genre")
+                         "FROM tracks WHERE n_genre<>'' AND source<>'radio' "
+                         "GROUP BY n_genre ORDER BY n_genre")
 
     def genre_tracks(self, n_genre):
         return self.db.q("SELECT * FROM tracks WHERE n_genre=? ORDER BY album_key, "

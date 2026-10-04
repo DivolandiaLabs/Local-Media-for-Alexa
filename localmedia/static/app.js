@@ -604,7 +604,7 @@ async function route() {
   const name = path.replace(/^\//, "") || "home";
   const q = Object.fromEntries(new URLSearchParams(qs || ""));
   document.querySelectorAll("[data-nav]").forEach((a) => a.classList.toggle("active", a.dataset.nav === name || (name === "artist" && a.dataset.nav === "artists") || (name === "album" && a.dataset.nav === "albums") || (name === "genre" && a.dataset.nav === "genres") || (name === "playlist" && a.dataset.nav === "playlists")));
-  $("#side").classList.remove("open");
+  setDrawer(false);
   const v = views[name] || views.home;
   main.innerHTML = `<div class="empty">Cargando…</div>`;
   try { await v(q); } catch (e) { if (e.message !== "auth" && seq === navSeq) main.innerHTML = `<div class="empty err">Error: ${esc(e.message)}</div>`; }
@@ -613,7 +613,34 @@ async function route() {
 }
 window.addEventListener("hashchange", route);
 $("#searchForm").onsubmit = (e) => { e.preventDefault(); const q = $("#searchBox").value.trim(); if (q) location.hash = `#/search?q=${enc(q)}`; };
-$("#menuBtn").onclick = () => $("#side").classList.toggle("open");
+// ---- barra lateral: en el ordenador se recoge a solo iconos; en pantallas estrechas es
+// un menu que se abre con ☰ y se cierra con « o tocando fuera
+const narrow = () => window.matchMedia("(max-width: 860px)").matches;
+function setDrawer(open) {
+  $("#side").classList.toggle("open", open);
+  $("#sideBackdrop").classList.toggle("show", open);
+  $("#sideBackdrop").hidden = !open;
+}
+function setCollapsed(c) {
+  document.documentElement.classList.toggle("side-collapsed", c);
+  try { c ? localStorage.setItem("lm-side", "collapsed") : localStorage.removeItem("lm-side"); } catch (e) { }
+  updateSideToggle();
+}
+function updateSideToggle() {
+  const b = $("#sideToggle");
+  const collapsed = !narrow() && document.documentElement.classList.contains("side-collapsed");
+  b.textContent = collapsed ? "»" : "«";
+  const label = narrow() ? "Cerrar el menú" : collapsed ? "Desplegar el menú" : "Recoger el menú";
+  b.title = label; b.setAttribute("aria-label", label);
+  b.setAttribute("aria-expanded", String(narrow() ? $("#side").classList.contains("open") : !collapsed));
+}
+$("#sideToggle").onclick = () => narrow() ? setDrawer(false)
+  : setCollapsed(!document.documentElement.classList.contains("side-collapsed"));
+$("#menuBtn").onclick = () => setDrawer(!$("#side").classList.contains("open"));
+$("#sideBackdrop").onclick = () => setDrawer(false);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("#side").classList.contains("open")) setDrawer(false); });
+window.matchMedia("(max-width: 860px)").addEventListener?.("change", () => { setDrawer(false); updateSideToggle(); });
+updateSideToggle();
 
 // ============================================================ login
 function showLogin() { $("#login").classList.remove("hidden"); $("#loginPw").focus(); }

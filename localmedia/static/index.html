@@ -10,6 +10,7 @@
 <script>
   // aplica el tema guardado antes de pintar (sin parpadeo)
   try { var t = localStorage.getItem("lm-theme"); if (t === "dark" || t === "light") document.documentElement.dataset.theme = t; } catch (e) {}
+  try { if (localStorage.getItem("lm-side") === "collapsed") document.documentElement.classList.add("side-collapsed"); } catch (e) {}
 </script>
 </head>
 <body>
@@ -25,22 +26,23 @@
 
 <div id="app" class="layout">
   <aside id="side" class="side">
-    <div class="brand"><img src="/static/cover.svg" alt="" width="28" height="28"> <span>Local Media <span class="brand-sub">for Alexa</span></span></div>
+    <div class="brand"><img src="/static/cover.svg" alt="" width="28" height="28"> <span class="lb">Local Media <span class="brand-sub">for Alexa</span></span>
+      <button type="button" id="sideToggle" class="side-toggle" aria-label="Recoger el menú" title="Recoger el menú">«</button></div>
     <form id="searchForm" class="search"><input id="searchBox" type="search" placeholder="Buscar en tu música…"></form>
     <nav>
-      <a href="#/" data-nav="home">🏠 Inicio</a>
-      <a href="#/artists" data-nav="artists">🎤 Artistas</a>
-      <a href="#/albums" data-nav="albums">💿 Álbumes</a>
-      <a href="#/tracks" data-nav="tracks">🎵 Canciones</a>
-      <a href="#/genres" data-nav="genres">🎸 Géneros</a>
-      <a href="#/folders" data-nav="folders">📁 Carpetas</a>
-      <a href="#/playlists" data-nav="playlists">📜 Listas</a>
-      <a href="#/favorites" data-nav="favorites">⭐ Favoritas</a>
-      <a href="#/radios" data-nav="radios">📻 Radios</a>
+      <a href="#/" data-nav="home" title="Inicio"><span class="ic">🏠</span><span class="lb">Inicio</span></a>
+      <a href="#/artists" data-nav="artists" title="Artistas"><span class="ic">🎤</span><span class="lb">Artistas</span></a>
+      <a href="#/albums" data-nav="albums" title="Álbumes"><span class="ic">💿</span><span class="lb">Álbumes</span></a>
+      <a href="#/tracks" data-nav="tracks" title="Canciones"><span class="ic">🎵</span><span class="lb">Canciones</span></a>
+      <a href="#/genres" data-nav="genres" title="Géneros"><span class="ic">🎸</span><span class="lb">Géneros</span></a>
+      <a href="#/folders" data-nav="folders" title="Carpetas"><span class="ic">📁</span><span class="lb">Carpetas</span></a>
+      <a href="#/playlists" data-nav="playlists" title="Listas"><span class="ic">📜</span><span class="lb">Listas</span></a>
+      <a href="#/favorites" data-nav="favorites" title="Favoritas"><span class="ic">⭐</span><span class="lb">Favoritas</span></a>
+      <a href="#/radios" data-nav="radios" title="Radios"><span class="ic">📻</span><span class="lb">Radios</span></a>
       <div class="sep"></div>
-      <a href="#/alexa" data-nav="alexa">🔊 Alexa</a>
-      <a href="#/setup" data-nav="setup">🧭 Configurar Alexa</a>
-      <a href="#/settings" data-nav="settings">⚙️ Ajustes</a>
+      <a href="#/alexa" data-nav="alexa" title="Alexa"><span class="ic">🔊</span><span class="lb">Alexa</span></a>
+      <a href="#/setup" data-nav="setup" title="Configurar Alexa"><span class="ic">🧭</span><span class="lb">Configurar Alexa</span></a>
+      <a href="#/settings" data-nav="settings" title="Ajustes"><span class="ic">⚙️</span><span class="lb">Ajustes</span></a>
     </nav>
     <div class="side-foot">
       <div id="scanBadge" class="scan-badge hidden"></div>
@@ -51,6 +53,7 @@
       </div>
     </div>
   </aside>
+  <div id="sideBackdrop" class="side-backdrop" hidden></div>
   <header class="topbar">
     <button id="menuBtn" class="icon-btn" aria-label="Menú">☰</button>
     <span class="brand small"><img src="/static/cover.svg" alt="" width="22" height="22"> <span>Local Media <span class="brand-sub">for Alexa</span></span></span>
