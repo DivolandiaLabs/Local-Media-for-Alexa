@@ -154,3 +154,9 @@ details.manual summary{cursor:pointer}
 /* nombre: "for Alexa" mas suave para que quepa en la barra */
 .brand{line-height:1.15}
 .brand-sub{font-weight:500;color:var(--muted);white-space:nowrap}
+/* tarjetas de Inicio que llevan a cada lista */
+a.stat.link{color:var(--text);position:relative;transition:border-color .15s,transform .15s,background .15s}
+a.stat.link:hover,a.stat.link:focus-visible{border-color:var(--accent);background:var(--panel2);transform:translateY(-2px);outline:none}
+a.stat.link .go{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:22px;color:var(--muted)}
+a.stat.link:hover .go,a.stat.link:focus-visible .go{color:var(--accent)}
+@media (prefers-reduced-motion: reduce){a.stat.link{transition:none}a.stat.link:hover{transform:none}}

@@ -187,7 +187,7 @@ const views = {
     if (!s.public_url) warn += `<div class="panel">🔊 Para escuchar en Alexa sigue la guía <a href="#/setup">Configurar Alexa</a>.</div>`;
     if (!s.ffmpeg) warn += `<div class="panel err">⚠ No encuentro <b>ffmpeg</b>: los FLAC, WMA, OGG… no sonarán en Alexa. Instálalo con <code>sudo apt install ffmpeg</code>.</div>`;
     main.innerHTML = `<h1>Tu música</h1><p class="muted">Último escaneo: ${ago(s.last_scan)}</p>${warn}
-    <div class="stats"><div class="stat"><b>${c.tracks}</b>canciones</div><div class="stat"><b>${c.albums}</b>álbumes</div><div class="stat"><b>${c.artists}</b>artistas</div><div class="stat"><b>${c.genres}</b>géneros</div><div class="stat"><b>${Math.round(c.seconds / 3600)}</b>horas</div></div>
+    <div class="stats"><a class="stat link" href="#/tracks"><b>${c.tracks}</b>canciones <span class="go">›</span></a><a class="stat link" href="#/albums"><b>${c.albums}</b>álbumes <span class="go">›</span></a><a class="stat link" href="#/artists"><b>${c.artists}</b>artistas <span class="go">›</span></a><a class="stat link" href="#/genres"><b>${c.genres}</b>géneros <span class="go">›</span></a><div class="stat"><b>${Math.round(c.seconds / 3600)}</b>horas</div></div>
     <div class="actions" style="margin-top:16px"><button class="btn primary" id="shufAll">🔀 Mezclar toda mi música</button></div>
     ${r.albums.length ? `<h2>Añadido recientemente</h2><div class="grid">${r.albums.slice(0, 18).map(albumCard).join("")}</div>` : ""}
     ${r.most.length ? `<h2>Lo más escuchado</h2>${trackTable(r.most.slice(0, 15))}` : ""}`;
@@ -544,7 +544,11 @@ darkQuery.addEventListener?.("change", () => { if (getTheme() === "auto") applyT
 applyTheme(getTheme());
 
 // ============================================================ router
+// Si una vista lenta termina despues de haber navegado a otra, la tapa: se lleva la
+// cuenta de navegaciones y, si la ultima ya habia terminado, se vuelve a pintar.
+let navSeq = 0, navDone = 0;
 async function route() {
+  const seq = ++navSeq;
   const h = location.hash.slice(1) || "/";
   const [path, qs] = h.split("?");
   const name = path.replace(/^\//, "") || "home";
@@ -553,8 +557,9 @@ async function route() {
   $("#side").classList.remove("open");
   const v = views[name] || views.home;
   main.innerHTML = `<div class="empty">Cargando…</div>`;
-  try { await v(q); } catch (e) { if (e.message !== "auth") main.innerHTML = `<div class="empty err">Error: ${esc(e.message)}</div>`; }
-  main.scrollTop = 0;
+  try { await v(q); } catch (e) { if (e.message !== "auth" && seq === navSeq) main.innerHTML = `<div class="empty err">Error: ${esc(e.message)}</div>`; }
+  if (seq === navSeq) { navDone = seq; main.scrollTop = 0; }
+  else if (navDone === navSeq) route();   // esta vista vieja ha tapado a la actual
 }
 window.addEventListener("hashchange", route);
 $("#searchForm").onsubmit = (e) => { e.preventDefault(); const q = $("#searchBox").value.trim(); if (q) location.hash = `#/search?q=${enc(q)}`; };
