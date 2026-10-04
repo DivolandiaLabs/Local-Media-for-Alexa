@@ -529,7 +529,13 @@ class Ctx:
         return response(self.t("help"), self.t("help_reprompt"), end=False)
 
     def i_amz_FallbackIntent(self, intent):
-        return response(self.t("fallback"), self.t("help_reprompt"), end=False)
+        # un ejemplo con un album de verdad de su biblioteca ayuda mas que uno generico
+        albums = [a["name"] for a in self.lib.albums() if a["name"]]
+        if albums:
+            text = self.t("fallback_example", name=random.choice(albums))
+        else:
+            text = self.t("fallback")
+        return response(text, self.t("help_reprompt"), end=False)
 
     def i_amz_NavigateHomeIntent(self, intent):
         return response(None, end=True)
