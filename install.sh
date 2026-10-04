@@ -101,7 +101,9 @@ Nice=5
 WantedBy=multi-user.target
 EOF
 $SUDO systemctl daemon-reload
-$SUDO systemctl enable --now localmedia
+# restart (no solo "enable --now"): al actualizar con git pull hay que cargar el codigo nuevo
+$SUDO systemctl enable localmedia
+$SUDO systemctl restart localmedia
 
 install_cloudflared() {
   if command -v cloudflared >/dev/null 2>&1; then return; fi
