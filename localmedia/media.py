@@ -35,10 +35,14 @@ def stream(track, cfg, start=0.0, transcode=None):
         abort(404)
     if transcode is None:
         transcode = needs_transcode(track, cfg)
-    src = track["path"][5:] if track["source"] == "upnp" else track["path"]
+    remote = track["source"] in ("upnp", "radio")
+    src = track["path"].split(":", 1)[1] if remote else track["path"]
+    if track["source"] == "radio":
+        start = 0  # en directo no se puede saltar
     if transcode:
         return _transcode(src, cfg, start)
-    if track["source"] == "upnp":
+    if remote:
+        # las radios suelen ser http: pasan por aqui para que Alexa las reciba por https
         return _proxy(src)
     if not os.path.exists(src):
         abort(404)

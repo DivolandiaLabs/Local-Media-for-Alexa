@@ -234,7 +234,7 @@ class Library:
 
     def _scan(self, full):
         st = self.status
-        audio, playlists, roots_ok = [], [], []
+        audio, playlists, roots_ok, itunes_xml = [], [], [], []
         for root in self.cfg["music_folders"]:
             root = os.path.abspath(os.path.expanduser(root))
             if not os.path.isdir(root):
@@ -252,6 +252,9 @@ class Library:
                         audio.append(p)
                     elif ext in PLAYLIST_EXT:
                         playlists.append(p)
+                    elif ext == ".xml" and ("library" in fn.lower() or "itunes" in fn.lower()
+                                            or "biblioteca" in fn.lower()):
+                        itunes_xml.append(p)
         st["total"] = len(audio)
         st["phase"] = "Leyendo etiquetas"
         existing = {r["path"]: r for r in self.db.q(
@@ -309,7 +312,7 @@ class Library:
             st["removed"] = len(gone)
             conn.commit()
         st["phase"] = "Listas de reproduccion"
-        self._import_playlists(playlists)
+        self._import_playlists(playlists, itunes_xml)
 
     def _make_row(self, p, stt):
         t = read_tags(p)
@@ -331,7 +334,7 @@ class Library:
             "n_genre": norm(t.get("genre") or ""),
         }
 
-    def _import_playlists(self, files):
+    def _import_playlists(self, files, itunes_xml=()):
         ids_by_path = {}
         for r in self.db.q("SELECT id, path FROM tracks WHERE source='local'"):
             ids_by_path[os.path.normcase(r["path"])] = r["id"]
@@ -346,8 +349,13 @@ class Library:
                 log.warning("Lista %s: %s", pl, e)
                 continue
             base = os.path.dirname(pl)
+            pl_name = os.path.splitext(os.path.basename(pl))[0]
             ids = []
-            for e in entries:
+            for e, title in entries:
+                if re.match(r"^https?://", e, re.I):   # emisora de radio / stream
+                    many = sum(1 for x, _ in entries if re.match(r"^https?://", x, re.I)) > 1
+                    ids.append(self.add_radio(title or (e if many else pl_name), e))
+                    continue
                 e = e.replace("\\", os.sep).replace("/", os.sep)
                 cand = e if os.path.isabs(e) else os.path.normpath(os.path.join(base, e))
                 i = ids_by_path.get(os.path.normcase(cand)) or \
@@ -356,29 +364,17 @@ class Library:
                     ids.append(i)
             if not ids:
                 continue
-            name = os.path.splitext(os.path.basename(pl))[0]
             keep.add(pl)
-            with self.db.write_lock:
-                c = self.db.conn()
-                row = c.execute("SELECT id FROM playlists WHERE path=?", (pl,)).fetchone()
-                if row:
-                    pid = row[0]
-                    c.execute("UPDATE playlists SET name=?, n_name=? WHERE id=?",
-                              (name, norm(name), pid))
-                    c.execute("DELETE FROM playlist_items WHERE playlist_id=?", (pid,))
-                else:
-                    pid = c.execute("INSERT INTO playlists(name,n_name,kind,path,created) "
-                                    "VALUES(?,?,?,?,?)",
-                                    (name, norm(name), "file", pl, time.time())).lastrowid
-                c.executemany("INSERT INTO playlist_items(playlist_id,pos,track_id) "
-                              "VALUES(?,?,?)", [(pid, n, i) for n, i in enumerate(ids)])
-                c.commit()
+            self._save_file_playlist(pl, pl_name, ids)
         for r in self.db.q("SELECT id, path FROM playlists WHERE kind='file'"):
             if r["path"] not in keep:
                 self.delete_playlist(r["id"])
+        if itunes_xml:
+            self._import_itunes(itunes_xml, by_name)
 
     @staticmethod
     def _parse_playlist(path):
+        """[(entrada, titulo o None)] de un .m3u/.m3u8/.pls."""
         with open(path, "rb") as f:
             raw = f.read()
         for enc in ("utf-8-sig", "cp1252", "latin-1"):
@@ -389,17 +385,25 @@ class Library:
                 continue
         out = []
         if path.lower().endswith(".pls"):
+            files, titles = {}, {}
             for line in text.splitlines():
-                m = re.match(r"\s*File\d+\s*=\s*(.+)", line, re.I)
+                m = re.match(r"\s*(File|Title)(\d+)\s*=\s*(.+)", line, re.I)
                 if m:
-                    out.append(m.group(1).strip())
+                    (files if m.group(1).lower() == "file" else titles)[m.group(2)] = \
+                        m.group(3).strip()
+            for k in sorted(files, key=lambda x: int(x)):
+                out.append((files[k], titles.get(k)))
         else:
+            title = None
             for line in text.splitlines():
                 line = line.strip()
-                if line and not line.startswith("#"):
+                if line.upper().startswith("#EXTINF"):
+                    title = line.split(",", 1)[1].strip() if "," in line else None
+                elif line and not line.startswith("#"):
                     if line.startswith("file://"):
                         line = urllib.parse.unquote(urllib.parse.urlparse(line).path)
-                    out.append(line)
+                    out.append((line, title))
+                    title = None
         return out
 
     # ------------------------------------------------------------ caratulas
@@ -523,10 +527,12 @@ class Library:
         return total, rows
 
     def random_ids(self, n):
-        return [r["id"] for r in self.db.q("SELECT id FROM tracks ORDER BY RANDOM() LIMIT ?", (n,))]
+        return [r["id"] for r in self.db.q("SELECT id FROM tracks WHERE source<>'radio' "
+                                           "ORDER BY RANDOM() LIMIT ?", (n,))]
 
     def recent_tracks(self, n=150):
-        albums = self.db.q("SELECT album_key, MAX(added) a FROM tracks GROUP BY album_key "
+        albums = self.db.q("SELECT album_key, MAX(added) a FROM tracks WHERE source<>'radio' "
+                           "GROUP BY album_key "
                            "ORDER BY a DESC LIMIT 40")
         out = []
         for a in albums:
@@ -779,7 +785,126 @@ class Library:
             "genres": sorted(set(n["genres"].values()))[:limit],
             "playlists": sorted({p["name"] for p in n["playlists"]})[:limit],
             "folders": folders[:limit],
+            "stations": [r["title"] for r in self.radios()][:limit],
         }
+
+    # ------------------------------------------------------------ pistas ignoradas
+    def ignored_ids(self):
+        return {r["track_id"] for r in self.db.q("SELECT track_id FROM ignored")}
+
+    def set_ignored(self, tid, on=True):
+        if on:
+            self.db.x("INSERT OR REPLACE INTO ignored(track_id, added) VALUES(?,?)",
+                      (tid, time.time()))
+        else:
+            self.db.x("DELETE FROM ignored WHERE track_id=?", (tid,))
+
+    def ignored_tracks(self):
+        return self.db.q("SELECT t.* FROM ignored i JOIN tracks t ON t.id=i.track_id "
+                         "ORDER BY i.added DESC")
+
+    # ------------------------------------------------------------ audiolibros
+    def bookmark(self, album_key):
+        return self.db.one("SELECT * FROM bookmarks WHERE album_key=?", (album_key,))
+
+    def save_bookmark(self, album_key, tid, offset_ms):
+        self.db.x("INSERT OR REPLACE INTO bookmarks(album_key, track_id, offset_ms, updated) "
+                  "VALUES(?,?,?,?)", (album_key, tid, int(offset_ms or 0), time.time()))
+
+    def clear_bookmark(self, album_key):
+        self.db.x("DELETE FROM bookmarks WHERE album_key=?", (album_key,))
+
+    # ------------------------------------------------------------ radios por Internet
+    # Se guardan como pistas (source='radio', path='radio:<url>') para reutilizar la cola,
+    # el envio de audio y la busqueda por voz.
+    def radios(self):
+        return self.db.q("SELECT * FROM tracks WHERE source='radio' ORDER BY n_title")
+
+    def add_radio(self, name, url):
+        name = (name or "").strip() or url
+        ext = os.path.splitext(urllib.parse.urlparse(url).path)[1].lower()
+        ext = ext if ext in (".mp3", ".aac", ".m4a", ".ogg", ".opus") else ".mp3"
+        path = "radio:" + url.strip()
+        row = {"path": path, "source": "radio", "folder": "radio:", "title": name,
+               "artist": "", "album_artist": "", "album": "Radios", "genre": "Radio",
+               "ext": ext, "album_key": "radio|", "n_title": norm(name), "n_artist": "",
+               "n_album_artist": "", "n_album": norm("Radios"), "n_genre": norm("Radio"),
+               "added": time.time()}
+        old = self.db.one("SELECT id FROM tracks WHERE path=?", (path,))
+        if old:
+            self.db.x("UPDATE tracks SET title=?, n_title=? WHERE id=?",
+                      (name, norm(name), old["id"]))
+            self._names_cache = None
+            return old["id"]
+        rid = self.db.x(f"INSERT INTO tracks({','.join(row)}) VALUES "
+                        f"({','.join('?' * len(row))})", list(row.values())).lastrowid
+        self._names_cache = None
+        return rid
+
+    def delete_radio(self, rid):
+        self.db.x("DELETE FROM tracks WHERE id=? AND source='radio'", (rid,))
+        self.db.x("DELETE FROM playlist_items WHERE track_id=?", (rid,))
+        self._names_cache = None
+
+    def find_radio(self, q):
+        return best(q, self.radios(), key=lambda r: r["n_title"], threshold=0.55)
+
+    # ------------------------------------------------------------ playlists de iTunes
+    def _import_itunes(self, xml_files, ids_by_name):
+        """Lee 'iTunes Library.xml' / 'Library.xml' (Archivo > Biblioteca > Exportar) y
+        crea sus playlists, casando las pistas por nombre de archivo."""
+        import plistlib
+        keep = set()
+        for xf in xml_files:
+            try:
+                with open(xf, "rb") as f:
+                    data = plistlib.load(f)
+            except Exception as e:
+                log.warning("iTunes %s: %s", xf, e)
+                continue
+            if not isinstance(data, dict) or "Tracks" not in data:
+                continue
+            loc = {}
+            for tid, t in (data.get("Tracks") or {}).items():
+                url = t.get("Location") or ""
+                name = os.path.basename(urllib.parse.unquote(urllib.parse.urlparse(url).path))
+                if name:
+                    loc[str(tid)] = name
+            for pl in data.get("Playlists") or []:
+                if pl.get("Master") or pl.get("Distinguished Kind") or pl.get("Folder") \
+                        or pl.get("Visible") is False:
+                    continue
+                ids = []
+                for it in pl.get("Playlist Items") or []:
+                    i = ids_by_name.get(os.path.normcase(loc.get(str(it.get("Track ID")), "")))
+                    if i:
+                        ids.append(i)
+                if not ids:
+                    continue
+                name = pl.get("Name") or "iTunes"
+                key = f"{xf}#{pl.get('Playlist Persistent ID') or name}"
+                keep.add(key)
+                self._save_file_playlist(key, name, ids, kind="itunes")
+        for r in self.db.q("SELECT id, path FROM playlists WHERE kind='itunes'"):
+            if r["path"] not in keep:
+                self.delete_playlist(r["id"])
+
+    def _save_file_playlist(self, path, name, ids, kind="file"):
+        with self.db.write_lock:
+            c = self.db.conn()
+            row = c.execute("SELECT id FROM playlists WHERE path=?", (path,)).fetchone()
+            if row:
+                pid = row[0]
+                c.execute("UPDATE playlists SET name=?, n_name=? WHERE id=?",
+                          (name, norm(name), pid))
+                c.execute("DELETE FROM playlist_items WHERE playlist_id=?", (pid,))
+            else:
+                pid = c.execute("INSERT INTO playlists(name,n_name,kind,path,created) "
+                                "VALUES(?,?,?,?,?)",
+                                (name, norm(name), kind, path, time.time())).lastrowid
+            c.executemany("INSERT INTO playlist_items(playlist_id,pos,track_id) VALUES(?,?,?)",
+                          [(pid, n, i) for n, i in enumerate(ids)])
+            c.commit()
 
 
 def _shrink(data, size=800):

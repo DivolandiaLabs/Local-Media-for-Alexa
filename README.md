@@ -85,6 +85,14 @@ cd ~/Local-Media-for-Alexa && ./install.sh
 | "¿Qué está sonando?" | ✅ |
 | Carátula y título en Echo Show / Spot / app | ✅ (cover.jpg de la carpeta o la carátula incrustada) |
 | Listas M3U / M3U8 / PLS | ✅ importadas solas al escanear |
+| Playlists de iTunes | ✅ lee `iTunes Library.xml` / `Library.xml` exportado (Archivo › Biblioteca › Exportar) |
+| "Reproduzca aleatoriamente" álbum, artista, playlist o género | ✅ |
+| Modos con palabras propias ("active el modo loop", "desactive shuffle"…) | ✅ |
+| "Añada esta a mi playlist X" | ✅ (la crea si no existe) |
+| "No ponga esta de nuevo" / "olvide esta pista" | ✅ lista de ignoradas recuperable en Ajustes |
+| Radios / streams de Internet ("ponga la emisora X") | ✅ apartado 📻 Radios en la web y .m3u/.pls con direcciones http |
+| Audiolibros ("lea X") | ✅ recuerda por dónde ibas |
+| Forma de frase de My Media: "Alexa, abre mi colección reproduzca …" | ✅ |
 | Listas propias | ✅ se crean y editan en la web, exportables a M3U |
 | FLAC, WMA, OGG, OPUS, WAV, ALAC, APE… | ✅ conversión al vuelo a MP3 con ffmpeg (con saltos/reanudación) |
 | Servidores UPnP / DLNA (NAS, Plex, Jellyfin, MiniDLNA…) | ✅ |

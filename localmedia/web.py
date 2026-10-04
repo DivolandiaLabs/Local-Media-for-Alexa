@@ -449,6 +449,33 @@ def make_lan_app(cfg, lib, skill, amazon=None):
                                    indent=2), mimetype="application/json", headers={
             "Content-Disposition": 'attachment; filename="skill.json"'})
 
+    # ------------------------------------------------------------ radios e ignoradas
+    @app.get("/api/radios")
+    def radios():
+        return jsonify(lib.radios())
+
+    @app.post("/api/radios")
+    def add_radio():
+        d = request.json or {}
+        url = (d.get("url") or "").strip()
+        if not url.lower().startswith(("http://", "https://")):
+            return jsonify(error="La dirección de la radio debe empezar por http:// o https://"), 400
+        return jsonify(id=lib.add_radio(d.get("name"), url))
+
+    @app.delete("/api/radios/<int:rid>")
+    def delete_radio(rid):
+        lib.delete_radio(rid)
+        return jsonify(ok=True)
+
+    @app.get("/api/ignored")
+    def ignored():
+        return jsonify(lib.ignored_tracks())
+
+    @app.delete("/api/ignored/<int:tid>")
+    def unignore(tid):
+        lib.set_ignored(tid, False)
+        return jsonify(ok=True)
+
     # ------------------------------------------------------------ Conectar con Amazon
     from .amazon import AmazonError
 

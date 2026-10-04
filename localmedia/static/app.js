@@ -285,6 +285,22 @@ const views = {
     }
   },
 
+  async radios() {
+    const list = await api("/api/radios");
+    main.innerHTML = `<h1>📻 Radios</h1><p class="muted">Emisoras y streams de Internet. Pídelas a Alexa con <b>“Alexa, pide a mi colección que ponga la radio …”</b> o <b>“…la emisora …”</b>. Las listas .m3u/.pls con direcciones de radio que haya en tus carpetas se añaden solas al escanear.</p>
+    <div class="panel"><div class="row"><input type="text" id="rName" placeholder="Nombre (p. ej. Radio Clásica)" style="flex:1 1 180px;min-width:0"><input type="url" id="rUrl" placeholder="https://… dirección del stream" style="flex:2 1 220px;min-width:0"><button class="btn primary" id="rAdd">＋ Añadir</button></div>
+    <p class="hint">Vale la dirección directa del audio (suele acabar en .mp3, .aac o /stream). Tras añadir radios, pulsa “🗣 Actualizar modelo de voz” en Configurar Alexa para que Alexa reconozca sus nombres.</p></div>
+    <div class="list">${list.map((r) => `<div class="item" data-id="${r.id}"><div style="font-size:24px">📻</div><div class="grow"><div class="t">${esc(r.title)}</div><div class="s" style="word-break:break-all">${esc(r.path.slice(6))}</div></div><button class="btn small" data-play="${r.id}">▶ Escuchar</button><button class="btn small" data-alexa="${r.id}">🔊 A Alexa</button><button class="icon-btn" data-del="${r.id}" title="Borrar">✕</button></div>`).join("") || '<div class="empty">Todavía no hay radios.</div>'}</div>`;
+    $("#rAdd").onclick = async () => {
+      const r = await fetch("/api/radios", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: $("#rName").value, url: $("#rUrl").value }) }).then((x) => x.json());
+      if (r.error) return toast(r.error);
+      toast("Radio añadida"); route();
+    };
+    main.querySelectorAll("[data-play]").forEach((b) => b.onclick = () => playList([list.find((r) => r.id === +b.dataset.play)]));
+    main.querySelectorAll("[data-alexa]").forEach((b) => b.onclick = () => { const r = list.find((x) => x.id === +b.dataset.alexa); sendToAlexa([r.id], r.title); });
+    main.querySelectorAll("[data-del]").forEach((b) => b.onclick = async () => { if (confirm("¿Borrar esta radio?")) { await api(`/api/radios/${b.dataset.del}`, { method: "DELETE" }); route(); } });
+  },
+
   async favorites() {
     const tracks = await api("/api/favorites");
     main.innerHTML = `<div class="head"><img src="/static/cover.svg" alt=""><div class="meta"><div class="muted">Lista automática</div><h1>⭐ Favoritas</h1><div class="muted">${tracks.length} canciones · Dile a Alexa “pon mis favoritas”</div>${actionBar(async () => tracks, "tus favoritas", { shuffle: true })}</div></div>${trackTable(tracks)}`;
@@ -388,6 +404,8 @@ cloudflared tunnel run --url http://localhost:${c.public_port} localmedia</pre>
       <div class="row"><div style="flex:1"><label class="f">Puerto web (LAN)</label><input type="number" id="lanp" value="${c.lan_port}"></div><div style="flex:1"><label class="f">Puerto público (Alexa)</label><input type="number" id="pubp" value="${c.public_port}"></div></div>
       <p class="hint">Los cambios de puerto se aplican al reiniciar: <code>sudo systemctl restart localmedia</code></p></div>
 
+    <div class="panel"><h2 style="margin-top:0">🚫 Pistas ignoradas</h2><p class="hint">Las que pediste a Alexa no volver a oír (“no ponga esta de nuevo”, “olvide esta pista”). No entran en las colas de voz, salvo si las pides por su nombre.</p><div id="ignoredList" class="list"><span class="muted">Cargando…</span></div></div>
+
     <div class="actions"><button class="btn primary" id="save">💾 Guardar ajustes</button></div>
     <p class="muted" style="margin-top:20px;font-size:13px">Local Media for Alexa ${esc(s.version)} · etiquetas: ${s.mutagen ? "mutagen OK" : "<span class='err'>falta mutagen</span>"}</p>`;
     let folders = c.music_folders.slice(), servers = (c.upnp_servers || []).slice();
@@ -414,6 +432,12 @@ cloudflared tunnel run --url http://localhost:${c.public_port} localmedia</pre>
     $("#save").onclick = save;
     $("#scan").onclick = async () => { await save(); await api("/api/scan", { method: "POST", body: {} }); pollScan(); };
     $("#fullScan").onclick = async () => { await save(); await api("/api/scan", { method: "POST", body: { full: true } }); pollScan(); };
+    const drawIgnored = async () => {
+      const ign = await api("/api/ignored");
+      $("#ignoredList").innerHTML = ign.map((t) => `<div class="item"><img src="${art(t.id)}" loading="lazy" alt=""><div class="grow"><div class="t">${esc(t.title)}</div><div class="s">${esc(t.artist)} — ${esc(t.album)}</div></div><button class="btn small" data-unign="${t.id}">↩ Recuperar</button></div>`).join("") || '<span class="muted">Ninguna.</span>';
+      $("#ignoredList").querySelectorAll("[data-unign]").forEach((b) => b.onclick = async () => { await api(`/api/ignored/${b.dataset.unign}`, { method: "DELETE" }); toast("Recuperada"); drawIgnored(); });
+    };
+    drawIgnored();
     pollScan();
   },
 };
@@ -490,8 +514,25 @@ async function drawAmazon() {
 }
 
 function sayings() {
-  const s = ["Alexa, abre mi colección", "Alexa, pide a mi colección que ponga Queen", "Alexa, pide a mi colección que ponga música de Estopa", "Alexa, pide a mi colección que ponga el álbum Thriller", "Alexa, pide a mi colección que ponga la canción Bohemian Rhapsody", "Alexa, pídele a mi colección que reproduzca la pista control de sueño", "Alexa, abre mi colección y reproduce la pista control de sueño", "Alexa, pídele a mi colección que ponga el audio relajación", "Alexa, pide a mi colección que ponga la lista Viaje", "Alexa, pide a mi colección que ponga música rock", "Alexa, pide a mi colección que ponga música de los ochenta", "Alexa, pide a mi colección que ponga música del 1995", "Alexa, pide a mi colección que ponga la carpeta Vinilos", "Alexa, pide a mi colección que ponga toda mi música", "Alexa, pide a mi colección que ponga mis favoritas", "Alexa, pide a mi colección que ponga lo último que he añadido", "Alexa, pide a mi colección que ponga lo más escuchado", "Alexa, pide a mi colección qué está sonando", "Alexa, pide a mi colección que ponga más de este artista", "Alexa, pide a mi colección que ponga este álbum", "Alexa, siguiente / anterior / pausa / continúa", "Alexa, aleatorio / quita el aleatorio", "Alexa, repite / desactiva la repetición", "Alexa, vuelve a empezar"];
-  return s.map((x) => `<div>🗣 ${esc(x)}</div>`).join("");
+  const A = "Alexa, abre mi colección";
+  const groups = [
+    ["Empezar", ["Alexa, abre mi colección", "Alexa, pide a mi colección que ponga Queen", `${A} y pon toda mi música`]],
+    ["Pistas y canciones", [`${A} reproduzca la pista control de sueño`, `${A} ponga la canción Bohemian Rhapsody de Queen`, `${A} reproduzca el audio relajación`, `${A} ponga la pista dormir bien del álbum Dormir bien`, "Alexa, pídele a mi colección que reproduzca la pista …"]],
+    ["Álbumes, artistas y carpetas", [`${A} reproduzca el álbum Thriller`, `${A} ponga música de Estopa`, `${A} ponga la carpeta Vinilos`]],
+    ["Playlists", [`${A} reproduzca mi playlist Viaje`, `${A} ponga la playlist Fiesta de iTunes`, `${A} añada esta a mi playlist Favoritas`]],
+    ["Géneros y épocas", [`${A} ponga música rock`, `${A} ponga algo de jazz`, `${A} ponga música de los ochenta`, `${A} ponga música del 1995`]],
+    ["Aleatorio", [`${A} reproduzca aleatoriamente el álbum Thriller`, `${A} ponga aleatoriamente música de Queen`, `${A} ponga aleatoriamente la playlist Viaje`, `${A} active el modo aleatorio`, `${A} desactive shuffle`]],
+    ["Repetición", [`${A} active la repetición`, `${A} encienda el modo loop`, `${A} desactive la repetición`]],
+    ["Lo que está sonando", [`${A} qué se está reproduciendo`, `${A} quién está cantando`, `${A} reproduzca esta canción`, `${A} ponga este álbum`, `${A} ponga este artista`]],
+    ["No volver a oír una pista", [`${A} no ponga esta de nuevo`, `${A} olvide esta pista`, `${A} ignore esta canción`]],
+    ["Radios por Internet", [`${A} ponga la radio Radio Clásica`, `${A} reproduzca la emisora de radio internet Los 40`, `${A} ponga mi stream Jazz`]],
+    ["Audiolibros", [`${A} lea El principito`, `${A} continúe el libro El principito`]],
+    ["Favoritas, novedades, más escuchado", [`${A} ponga mis favoritas`, `${A} ponga lo último que he añadido`, `${A} ponga lo más escuchado`]],
+    ["Mientras suena", ["Alexa, siguiente / anterior / pausa / continúa", "Alexa, aleatorio / quita el aleatorio", "Alexa, repite / desactiva la repetición", "Alexa, vuelve a empezar"]],
+    ["Servidor", [`${A} cuál es mi servidor actual`]],
+  ];
+  return groups.map(([t, xs]) => `<p style="margin:12px 0 4px"><b>${esc(t)}</b></p>` + xs.map((x) => `<div>🗣 ${esc(x)}</div>`).join("")).join("") +
+    `<p class="hint" style="margin-top:12px">También vale con “Alexa, pide a mi colección que…” y “Alexa, abre mi colección y…”.</p>`;
 }
 
 async function pickFolder(cb, path) {

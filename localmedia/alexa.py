@@ -14,7 +14,7 @@ log = logging.getLogger("localmedia.alexa")
 
 DEFAULT_STATE = {"queue": [], "order": [], "pos": 0, "offset": 0, "shuffle": False,
                  "loop": False, "qid": "", "desc": "", "pending": False, "playing": False,
-                 "fails": 0, "updated": 0}
+                 "fails": 0, "updated": 0, "book": None}
 
 
 class Devices:
@@ -255,6 +255,7 @@ class Ctx:
         self.req = req
         self.audio = audio or {}
         self.session = session
+        self.force_shuffle = False   # "reproduzca aleatoriamente ..."
 
     # -------------------------------------------------------------- ayudas
     def _sync_from_context(self):
@@ -267,12 +268,26 @@ class Ctx:
             self.st["offset"] = int(self.audio.get("offsetInMilliseconds") or 0) + p[3]
         return pos
 
-    def _start(self, tracks, speech, shuffle=False, first=None):
+    def _start(self, tracks, speech, shuffle=False, first=None, book=None):
         ids = [x["id"] if isinstance(x, dict) else x for x in tracks]
         if not ids:
             return None
+        # pistas que pediste no volver a oir ("no ponga esta de nuevo"), salvo si es la
+        # unica o la que has pedido por su nombre
+        ignored = self.lib.ignored_ids()
+        if ignored and len(ids) > 1:
+            first_id = ids[first] if first is not None and first < len(ids) else None
+            kept = [i for i in ids if i not in ignored or i == first_id]
+            if kept:
+                ids = kept
+                first = ids.index(first_id) if first_id in ids else None
+        if self.force_shuffle:
+            shuffle, first = True, None
+            if speech.endswith("."):
+                speech = speech[:-1] + self.t("shuffled_suffix") + "."
         set_queue(self.st, ids, speech, shuffle, int(self.cfg["max_queue"]), first)
         self.st["pending"] = False
+        self.st["book"] = book
         d = self.s.play_directive(self.st, self.st["pos"])
         if d is None:
             return response(self.t("not_understood"), end=True)
@@ -338,6 +353,13 @@ class Ctx:
             return response(self.t("not_understood"), self.t("welcome_reprompt"), end=False)
         res = self.lib.find_artist(q)
         if not res:
+            # "ponga algo de jazz": no es un artista sino un genero (o cualquier otra cosa)
+            g = self.lib.find_genre(q)
+            if g and g[0][0] >= 0.8:
+                return self.i_PlayGenreIntent({"slots": {"genre": {"value": q}}})
+            r = self.lib.resolve_any(q)
+            if r:
+                return self.i_PlayAnythingIntent({"slots": {"query": {"value": q}}})
             return self._not_found("artist", q)
         _, n, name = res[0]
         return self._start(self.lib.artist_tracks(n), self.t("playing_artist", name=name),
@@ -374,8 +396,17 @@ class Ctx:
     def i_PlaySongIntent(self, intent):
         q = self._slot(intent, "song")
         artist = self._slot(intent, "artist")
+        album = self._slot(intent, "album")
         if not q:
             return response(self.t("not_understood"), self.t("welcome_reprompt"), end=False)
+        if album:   # "ponga {pista} del álbum {album}"
+            al = self.lib.find_album(album, artist)
+            if al:
+                from .textnorm import best
+                inside = best(q, self.lib.album_tracks(al[0][1]["key"]),
+                              key=lambda t: t["n_title"], threshold=0.5)
+                if inside:
+                    return self._play_track(inside[0][1])
         res = self.lib.find_song(q, artist)
         if not res:
             return self._not_found("song", q)
@@ -399,6 +430,9 @@ class Ctx:
 
     def i_PlayPlaylistIntent(self, intent):
         q = self._slot(intent, "playlist")
+        if q:   # "la playlist X de iTunes": iTunes no forma parte del nombre
+            import re as _re
+            q = _re.sub(r"\b(de|en)?\s*i ?tunes\b", " ", q, flags=_re.I).strip() or q
         if not q:
             return response(self.t("not_understood"), self.t("welcome_reprompt"), end=False)
         res = self.lib.find_playlist(q)
@@ -572,6 +606,118 @@ class Ctx:
         return response(text, card=(title, f"{tr['artist']}\n{tr['album']}"))
 
     # ---- integrados de Amazon
+    # ---- frases de My Media: modos con palabras propias
+    def i_RepeatModeOnIntent(self, intent):
+        return self.i_amz_LoopOnIntent(intent)
+
+    def i_RepeatModeOffIntent(self, intent):
+        return self.i_amz_LoopOffIntent(intent)
+
+    def i_ShuffleModeOnIntent(self, intent):
+        return self.i_amz_ShuffleOnIntent(intent)
+
+    def i_ShuffleModeOffIntent(self, intent):
+        return self.i_amz_ShuffleOffIntent(intent)
+
+    # ---- "reproduzca aleatoriamente ..."
+    def _shuffled(self, handler, intent):
+        self.force_shuffle = True
+        return handler(intent)
+
+    def i_ShuffleAlbumIntent(self, intent):
+        return self._shuffled(self.i_PlayAlbumIntent, intent)
+
+    def i_ShuffleArtistIntent(self, intent):
+        return self._shuffled(self.i_PlayArtistIntent, intent)
+
+    def i_ShufflePlaylistIntent(self, intent):
+        return self._shuffled(self.i_PlayPlaylistIntent, intent)
+
+    def i_ShuffleGenreIntent(self, intent):
+        return self._shuffled(self.i_PlayGenreIntent, intent)
+
+    def i_ShuffleAnythingIntent(self, intent):
+        return self._shuffled(self.i_PlayAnythingIntent, intent)
+
+    # ---- "reproduzca esta / esto / lo que se muestra"
+    def i_PlayThisIntent(self, intent):
+        tr = self._current_track()
+        if tr is None:
+            return self.i_amz_ResumeIntent(intent)
+        return self.i_amz_StartOverIntent(intent)
+
+    # ---- "no ponga esta de nuevo" / "olvide esta pista"
+    def i_IgnoreTrackIntent(self, intent):
+        tr = self._current_track()
+        if tr is None:
+            return response(self.t("nothing_playing"))
+        self.lib.set_ignored(tr["id"], True)
+        text = self.t("ignored", title=spoken_title(tr["title"]))
+        nxt = self._jump(1, speak=True)
+        nxt["response"]["outputSpeech"] = {"type": "PlainText", "text": text}
+        if not nxt["response"].get("directives"):   # era la ultima: se para
+            nxt["response"]["directives"] = [STOP]
+            self.st["playing"] = False
+        return nxt
+
+    # ---- "añada esta a mi playlist X"
+    def i_AddToPlaylistIntent(self, intent):
+        tr = self._current_track()
+        name = self._slot(intent, "playlist")
+        if tr is None:
+            return response(self.t("nothing_playing"))
+        if not name:
+            return response(self.t("not_understood"), self.t("welcome_reprompt"), end=False)
+        title = spoken_title(tr["title"])
+        found = [p for s, p in self.lib.find_playlist(name) if s >= 0.75]
+        own = [p for p in found if (self.lib.playlist(p["id"]) or {}).get("kind") == "user"]
+        if own:
+            self.lib.add_to_playlist(own[0]["id"], [tr["id"]])
+            return response(self.t("added_to_playlist", title=title, name=own[0]["name"]))
+        pid = self.lib.create_playlist(name.strip().capitalize(), [tr["id"]])
+        return response(self.t("created_playlist", title=title,
+                               name=self.lib.playlist(pid)["name"]))
+
+    # ---- radios por Internet
+    def i_PlayStreamIntent(self, intent):
+        q = self._slot(intent, "station")
+        radios = self.lib.radios()
+        if not radios:
+            return response(self.t("no_stations"))
+        res = self.lib.find_radio(q) if q else []
+        if not res:
+            return self._not_found("station", q)
+        r = res[0][1]
+        return self._start([r], self.t("playing_stream", name=r["title"]))
+
+    # ---- audiolibros: "lea {libro}" (sigue donde lo dejaste)
+    def i_ReadBookIntent(self, intent):
+        q = self._slot(intent, "book")
+        res = self.lib.find_album(q) if q else []
+        if not res:
+            return self._not_found("book", q)
+        a = res[0][1]
+        tracks = self.lib.album_tracks(a["key"])
+        bm = self.lib.bookmark(a["key"])
+        first = next((i for i, t in enumerate(tracks) if bm and t["id"] == bm["track_id"]), None)
+        if first is None:
+            return self._start(tracks, self.t("book_start", name=a["name"]), book=a["key"])
+        out = self._start(tracks, self.t("book_resume", name=a["name"]), first=first,
+                          book=a["key"])
+        if bm["offset_ms"] > 5000 and out and out["response"].get("directives"):
+            d = self.s.play_directive(self.st, self.st["pos"], bm["offset_ms"])
+            if d:
+                out["response"]["directives"] = [d]
+        return out
+
+    # ---- servidores e invitaciones (Local Media tiene un unico servidor: tu Pi)
+    def i_ServerInfoIntent(self, intent):
+        c = self.lib.counts()
+        return response(self.t("server_info", n=c["tracks"]))
+
+    def i_FamilyIntent(self, intent):
+        return response(self.t("family_info"))
+
     def i_amz_HelpIntent(self, intent):
         return response(self.t("help"), self.t("help_reprompt"), end=False)
 
@@ -696,6 +842,9 @@ class Ctx:
                 tid = track_at(st, pos)
                 if tid:
                     self.lib.record_play(tid)
+                    if st.get("book"):
+                        p = parse_token(tok)
+                        self.lib.save_bookmark(st["book"], tid, p[3] if p else 0)
             return EMPTY
         if ev == "PlaybackNearlyFinished":
             if pos is None:
@@ -709,12 +858,16 @@ class Ctx:
             if pos is not None:
                 st["pos"] = pos
                 st["offset"] = int(req.get("offsetInMilliseconds") or 0) + parse_token(tok)[3]
+                if st.get("book"):
+                    self.lib.save_bookmark(st["book"], track_at(st, pos), st["offset"])
             st["playing"] = False
             return EMPTY
         if ev == "PlaybackFinished":
             if pos is not None and next_pos(st, pos) is None:
                 st["playing"] = False
                 st["offset"] = 0
+                if st.get("book"):   # libro terminado: la proxima vez empieza de nuevo
+                    self.lib.clear_bookmark(st["book"])
             return EMPTY
         if ev == "PlaybackFailed":
             log.warning("Fallo de reproduccion: %s", req.get("error"))

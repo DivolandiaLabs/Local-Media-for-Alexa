@@ -113,21 +113,190 @@ U = {
     },
 }
 
-# conjugaciones para "Alexa, pide a mi colección que PONGA..."
+# ---- Frases de My Media for Alexa que faltaban (todas funcionan tambien con
+#      "Alexa, abre mi colección reproduzca/ponga ..." gracias a SUBJ)
+_V = ("pon", "reproduce")
+
+
+def _both(*tpls):
+    """'{v} la pista {song}' -> con pon y con reproduce."""
+    return [t.format(v=v, song="{song}", album="{album}", artist="{artist}",
+                     playlist="{playlist}", genre="{genre}", station="{station}",
+                     book="{book}", query="{query}") for t in tpls for v in _V]
+
+
+def _add(lang, intent, samples):
+    U[lang].setdefault(intent, [])
+    U[lang][intent] += [s for s in samples if s not in U[lang][intent]]
+
+
+_add("es", "PlayAlbumIntent", _both(
+    "{v} álbum {album}", "{v} disco {album}", "{v} música del álbum {album}",
+    "{v} canciones del álbum {album}", "{v} el álbum {album} entero"))
+_add("es", "PlaySongIntent", _both(
+    "{v} pista {song}", "{v} canción {song}", "{v} audio {song}",
+    "{v} pista {song} de {artist}", "{v} canción {song} de {artist}",
+    "{v} la canción {song} de {artist}", "{v} {song} de {artist}",
+    "{v} {song} del álbum {album}", "{v} la canción {song} del álbum {album}",
+    "{v} la pista {song} del álbum {album}"))
+_add("es", "PlayArtistIntent", _both("{v} canciones de {artist}", "{v} temas de {artist}"))
+_add("es", "PlayPlaylistIntent", _both(
+    "{v} playlist {playlist}", "{v} mi playlist {playlist}", "{v} la playlist {playlist}",
+    "{v} playlist itunes {playlist}", "{v} mi playlist itunes {playlist}",
+    "{v} la playlist itunes {playlist}", "{v} la playlist {playlist} de itunes",
+    "{v} la playlist {playlist} en itunes", "{v} mi lista {playlist}"))
+_add("es", "PlayGenreIntent", _both(
+    "{v} algo de música {genre}", "{v} canciones {genre}", "{v} música de {genre}"))
+_add("es", "RepeatModeOnIntent", [
+    f"{v} {m}" for v in ("activa", "enciende")
+    for m in ("la repetición", "repetición", "el modo repetición", "modo repetición",
+              "el modo loop", "modo loop", "looping", "el bucle")])
+_add("es", "RepeatModeOffIntent", [
+    f"{v} {m}" for v in ("desactiva", "apaga", "quita")
+    for m in ("la repetición", "repetición", "el modo repetición", "modo repetición",
+              "el modo loop", "modo loop", "looping", "el bucle")])
+_add("es", "ShuffleModeOnIntent", [
+    f"{v} {m}" for v in ("activa", "enciende")
+    for m in ("el aleatorio", "aleatorio", "el modo aleatorio", "modo aleatorio",
+              "shuffle", "el modo shuffle", "modo shuffle", "la reproducción aleatoria")])
+_add("es", "ShuffleModeOffIntent", [
+    f"{v} {m}" for v in ("desactiva", "apaga", "quita")
+    for m in ("el aleatorio", "aleatorio", "el modo aleatorio", "modo aleatorio",
+              "shuffle", "el modo shuffle", "modo shuffle", "la reproducción aleatoria")])
+_add("es", "ShuffleAlbumIntent", _both(
+    "{v} aleatoriamente el álbum {album}", "{v} aleatoriamente álbum {album}",
+    "{v} aleatoriamente {album} el álbum", "{v} aleatoriamente música del álbum {album}",
+    "{v} el álbum {album} en aleatorio", "{v} el álbum {album} aleatoriamente",
+    "{v} el disco {album} en aleatorio"))
+_add("es", "ShuffleArtistIntent", _both(
+    "{v} aleatoriamente música de {artist}", "{v} aleatoriamente canciones de {artist}",
+    "{v} aleatoriamente a {artist}", "{v} música de {artist} en aleatorio",
+    "{v} canciones de {artist} en aleatorio"))
+_add("es", "ShufflePlaylistIntent", _both(
+    "{v} aleatoriamente playlist {playlist}", "{v} aleatoriamente la playlist {playlist}",
+    "{v} aleatoriamente mi playlist {playlist}", "{v} aleatoriamente la lista {playlist}",
+    "{v} aleatoriamente mi playlist itunes {playlist}",
+    "{v} aleatoriamente la playlist {playlist} de itunes",
+    "{v} la playlist {playlist} en aleatorio", "{v} la lista {playlist} en aleatorio"))
+_add("es", "ShuffleGenreIntent", _both(
+    "{v} aleatoriamente música {genre}", "{v} aleatoriamente algo de música {genre}",
+    "{v} música {genre} en aleatorio"))
+_add("es", "ShuffleAnythingIntent", _both("{v} aleatoriamente {query}", "{v} en aleatorio {query}"))
+_add("es", "PlayThisIntent", _both(
+    "{v} esta", "{v} esto", "{v} esta canción", "{v} esta pista", "{v} esta música",
+    "{v} lo que se muestra", "{v} lo que está en mi pantalla", "{v} la selección actual"))
+_add("es", "PlayCurrentAlbumIntent", ["reproduce este álbum", "reproduce este disco"])
+_add("es", "PlayMoreByArtistIntent", ["pon este artista", "reproduce este artista"])
+_add("es", "IgnoreTrackIntent", [
+    "ignora esta canción", "ignora esta pista", "ignora lo que se está reproduciendo",
+    "ignora esto", "olvida esta canción", "olvida esta pista", "desindexa esta canción",
+    "desindexa esta pista"] + [
+    f"no {v} {w}{e}" for v in ("pongas", "ponga", "reproduzcas", "reproduzca")
+    for w in ("esta", "esto", "esta canción", "esta pista")
+    for e in (" de nuevo", " más")] + [
+    f"no {v} más {w}" for v in ("pongas", "ponga", "reproduzcas", "reproduzca")
+    for w in ("esta", "esto", "esta canción", "esta pista")] + [
+    "no reproducir esta de nuevo", "no reproducir esto de nuevo"])
+_add("es", "AddToPlaylistIntent", [
+    f"añade {w} a {p} {{playlist}}" for w in ("esta", "esta pista", "esta canción", "esto")
+    for p in ("mi playlist", "la playlist", "playlist", "mi lista", "la lista",
+              "mi playlist itunes", "la playlist itunes")] + [
+    "añade esta a la playlist {playlist} de itunes", "añade esta canción a la lista {playlist}",
+    "guarda esta en la lista {playlist}", "guarda esta canción en la lista {playlist}"])
+_add("es", "PlayStreamIntent", _both(
+    "{v} la radio {station}", "{v} radio {station}", "{v} la emisora {station}",
+    "{v} emisora {station}", "{v} mi stream {station}", "{v} el stream {station}",
+    "{v} stream {station}", "{v} mi flujo {station}", "{v} el flujo {station}",
+    "{v} flujo {station}", "{v} mi stream web {station}", "{v} mi flujo web {station}",
+    "{v} el stream web {station}", "{v} stream web {station}",
+    "{v} mi stream internet {station}", "{v} stream internet {station}",
+    "{v} la radio internet {station}", "{v} radio internet {station}",
+    "{v} la emisora internet {station}", "{v} emisora internet {station}",
+    "{v} la emisora de radio internet {station}", "{v} emisora de radio internet {station}",
+    "{v} mi playlist web {station}", "{v} la playlist web {station}",
+    "{v} playlist web {station}", "{v} mi playlist internet {station}",
+    "{v} la playlist internet {station}", "{v} playlist internet {station}",
+    "{v} {station} de internet", "{v} {station} de la web", "{v} {station} de web") + [
+    "stream {station} de internet", "stream {station} de la web", "stream {station} de web"])
+_add("es", "ReadBookIntent", [
+    "lee {book}", "lee el libro {book}", "lee el audiolibro {book}", "pon el audiolibro {book}",
+    "pon el libro {book}", "reproduce el audiolibro {book}", "continúa el libro {book}",
+    "sigue con el libro {book}", "quiero escuchar el libro {book}"])
+_add("es", "WhatIsPlayingIntent", [
+    "qué se está reproduciendo", "qué está reproduciendo", "qué es esta pista",
+    "cuál es esta pista", "quién está cantando", "quién canta"])
+_add("es", "ServerInfoIntent", [
+    "lista mis servidores", "qué servidores puedo usar", "qué servidores puedo acceder",
+    "dime mis servidores", "cuál es mi servidor actual", "cuál es mi servidor activo",
+    "qué servidor está activo", "cuál es el servidor actual", "cuál es el servidor activo",
+    "qué servidores puedo registrar", "qué servidores se pueden registrar",
+    "cambia servidor", "cambia de servidor", "cambia servidores", "cambia de servidores",
+    "conmuta servidor", "conmuta de servidor", "conmuta servidores", "conmuta de servidores"])
+_add("es", "FamilyIntent", [
+    "lista mis invitaciones", "dime mis invitaciones", "dame mis invitaciones",
+    "qué puedo registrar", "si tengo algunos registros pendientes",
+    "si tengo algunos servidores pendientes", "tengo invitaciones pendientes"])
+
+_add("en", "RepeatModeOnIntent", ["turn on repeat", "turn on looping", "enable loop mode",
+                                  "turn repeat on", "enable repeat"])
+_add("en", "RepeatModeOffIntent", ["turn off repeat", "turn off looping", "disable loop mode",
+                                   "turn repeat off", "disable repeat"])
+_add("en", "ShuffleModeOnIntent", ["turn on shuffle", "enable shuffle mode", "turn shuffle on"])
+_add("en", "ShuffleModeOffIntent", ["turn off shuffle", "disable shuffle mode",
+                                    "turn shuffle off"])
+_add("en", "ShuffleAlbumIntent", ["shuffle the album {album}", "shuffle album {album}"])
+_add("en", "ShuffleArtistIntent", ["shuffle music by {artist}", "shuffle songs by {artist}"])
+_add("en", "ShufflePlaylistIntent", ["shuffle the playlist {playlist}",
+                                     "shuffle my playlist {playlist}"])
+_add("en", "ShuffleGenreIntent", ["shuffle {genre} music"])
+_add("en", "ShuffleAnythingIntent", ["shuffle play {query}", "play {query} on shuffle"])
+_add("en", "PlayThisIntent", ["play this", "play this song", "play this track",
+                              "play what's on my screen", "play the current selection"])
+_add("en", "IgnoreTrackIntent", ["ignore this song", "ignore this track",
+                                 "don't play this again", "never play this song again",
+                                 "forget this song"])
+_add("en", "AddToPlaylistIntent", ["add this to my playlist {playlist}",
+                                   "add this song to the playlist {playlist}",
+                                   "add this track to playlist {playlist}"])
+_add("en", "PlayStreamIntent", ["play the radio {station}", "play the station {station}",
+                                "play my stream {station}", "play internet radio {station}",
+                                "play {station} from the internet"])
+_add("en", "ReadBookIntent", ["read {book}", "read the book {book}",
+                              "play the audiobook {book}", "continue the book {book}"])
+_add("en", "WhatIsPlayingIntent", ["who is singing", "what track is this"])
+_add("en", "ServerInfoIntent", ["list my servers", "what is my current server",
+                                "which server is active", "switch server"])
+_add("en", "FamilyIntent", ["list my invitations", "do i have pending invitations"])
+
+# conjugaciones para "Alexa, pide a mi colección que PONGA..." y para la forma de
+# My Media "Alexa, abre mi colección PONGA/REPRODUZCA..."
 SUBJ = {"pon ": "ponga ", "reproduce ": "reproduzca ", "busca ": "busque ",
         "toca ": "toque ", "mezcla ": "mezcle ", "abre ": "abra ",
-        "sorpréndeme": "me sorprenda"}
+        "sorpréndeme": "me sorprenda", "activa ": "active ", "enciende ": "encienda ",
+        "desactiva ": "desactive ", "apaga ": "apague ", "quita ": "quite ",
+        "ignora ": "ignore ", "olvida ": "olvide ", "desindexa ": "desindexe ",
+        "añade ": "añada ", "guarda ": "guarde ", "lee ": "lea ", "continúa ": "continúe ",
+        "sigue ": "siga ", "lista ": "liste ", "dime ": "me diga ", "dame ": "me dé ",
+        "cambia ": "cambie ", "conmuta ": "conmute "}
 
 SLOTS = {
     "PlayArtistIntent": {"artist": "ARTIST_NAME"},
     "PlayAlbumIntent": {"album": "ALBUM_NAME", "artist": "ARTIST_NAME"},
-    "PlaySongIntent": {"song": "SONG_NAME", "artist": "ARTIST_NAME"},
+    "PlaySongIntent": {"song": "SONG_NAME", "artist": "ARTIST_NAME", "album": "ALBUM_NAME"},
     "PlayGenreIntent": {"genre": "GENRE_NAME"},
     "PlayPlaylistIntent": {"playlist": "PLAYLIST_NAME"},
     "PlayFolderIntent": {"folder": "FOLDER_NAME"},
     "PlayYearIntent": {"year": "AMAZON.FOUR_DIGIT_NUMBER"},
     "PlayDecadeIntent": {"decade": "DECADE"},
     "PlayAnythingIntent": {"query": "AMAZON.SearchQuery"},
+    "ShuffleAlbumIntent": {"album": "ALBUM_NAME"},
+    "ShuffleArtistIntent": {"artist": "ARTIST_NAME"},
+    "ShufflePlaylistIntent": {"playlist": "PLAYLIST_NAME"},
+    "ShuffleGenreIntent": {"genre": "GENRE_NAME"},
+    "ShuffleAnythingIntent": {"query": "AMAZON.SearchQuery"},
+    "AddToPlaylistIntent": {"playlist": "PLAYLIST_NAME"},
+    "PlayStreamIntent": {"station": "STATION_NAME"},
+    "ReadBookIntent": {"book": "ALBUM_NAME"},
 }
 
 SAMPLES = {
@@ -140,7 +309,8 @@ SAMPLES = {
            "GENRE_NAME": ["rock", "pop", "jazz", "flamenco", "clásica", "reggaeton", "electrónica",
                           "blues", "metal", "indie", "salsa", "hip hop"],
            "PLAYLIST_NAME": ["favoritas", "viaje", "fiesta", "relax", "gimnasio", "cena"],
-           "FOLDER_NAME": ["descargas", "vinilos", "bandas sonoras", "conciertos"]},
+           "FOLDER_NAME": ["descargas", "vinilos", "bandas sonoras", "conciertos"],
+           "STATION_NAME": ["radio tres", "los cuarenta", "radio clásica", "jazz radio"]},
     "en": {"ARTIST_NAME": ["Queen", "The Beatles", "Taylor Swift", "Coldplay", "AC DC",
                            "Pink Floyd", "Adele", "Drake", "Radiohead", "Daft Punk"],
            "ALBUM_NAME": ["Thriller", "Abbey Road", "Back in Black", "Dark Side of the Moon",
@@ -150,7 +320,8 @@ SAMPLES = {
            "GENRE_NAME": ["rock", "pop", "jazz", "classical", "country", "electronic", "blues",
                           "metal", "indie", "hip hop", "soul", "reggae"],
            "PLAYLIST_NAME": ["favorites", "road trip", "party", "chill", "workout", "dinner"],
-           "FOLDER_NAME": ["downloads", "vinyl rips", "soundtracks", "live"]},
+           "FOLDER_NAME": ["downloads", "vinyl rips", "soundtracks", "live"],
+           "STATION_NAME": ["jazz radio", "classic fm", "radio paradise", "lofi radio"]},
 }
 
 DECADES = {
@@ -173,7 +344,8 @@ BUILTINS = ["AMAZON.CancelIntent", "AMAZON.HelpIntent", "AMAZON.StopIntent",
             "AMAZON.LoopOffIntent", "AMAZON.StartOverIntent", "AMAZON.RepeatIntent"]
 
 TYPE_FOR_NAMES = {"ARTIST_NAME": "artists", "ALBUM_NAME": "albums", "SONG_NAME": "songs",
-                  "GENRE_NAME": "genres", "PLAYLIST_NAME": "playlists", "FOLDER_NAME": "folders"}
+                  "GENRE_NAME": "genres", "PLAYLIST_NAME": "playlists", "FOLDER_NAME": "folders",
+                  "STATION_NAME": "stations"}
 
 
 def _clean(v):

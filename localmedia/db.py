@@ -37,6 +37,12 @@ CREATE TABLE IF NOT EXISTS devices(
   device_id TEXT PRIMARY KEY, name TEXT, user_id TEXT, last_seen REAL, state TEXT
 );
 CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT);
+-- "Alexa, ... no ponga esta de nuevo": no se mete en las colas de voz
+CREATE TABLE IF NOT EXISTS ignored(track_id INTEGER PRIMARY KEY, added REAL);
+-- audiolibros: por donde ibas en cada libro (album)
+CREATE TABLE IF NOT EXISTS bookmarks(
+  album_key TEXT PRIMARY KEY, track_id INTEGER, offset_ms INTEGER, updated REAL
+);
 """
 
 
