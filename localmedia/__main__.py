@@ -75,6 +75,11 @@ def main():
     lib = Library(cfg, db)
     skill = AlexaSkill(cfg, lib, db)
     log.info("Local Media %s - datos en %s", __version__, args.data)
+    from .alexa_verify import HAVE_CRYPTO
+    if cfg["verify_signatures"] and not HAVE_CRYPTO:
+        log.warning("Falta el paquete 'cryptography': Alexa no podra conectarse mientras la "
+                    "comprobacion de firma este activada. Instalalo con "
+                    ".venv/bin/pip install cryptography o desactivala en Ajustes.")
 
     if cfg["music_folders"] or cfg["upnp_enabled"]:
         lib.start_scan(False)

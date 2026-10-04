@@ -1,6 +1,7 @@
-flask>=2.3
+flask>=2.2
 waitress>=2.1
-mutagen>=1.46
-cryptography>=42
-certifi
-pillow
+mutagen>=1.45
+# Opcionales (install.sh los intenta por separado; si faltan, el programa sigue):
+#   cryptography>=40  comprobar la firma de Amazon (muy recomendable)
+#   certifi           certificados de confianza
+#   pillow            reducir caratulas grandes para el Echo Show

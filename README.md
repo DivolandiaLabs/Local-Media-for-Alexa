@@ -45,6 +45,30 @@ cd ~/Local-Media-for-Alexa && git pull && ./install.sh
 
 Con Docker: mira las instrucciones al principio del [Dockerfile](Dockerfile).
 
+### Raspberry Pi OS antiguo (Bullseye / Buster)
+
+Mira tu versión con `cat /etc/os-release`. Raspberry Pi OS **Bullseye** (Debian 11) y
+**Buster** (Debian 10) ya no reciben soporte, y Debian va retirando sus paquetes de los
+servidores normales: `apt` da errores `404 Not Found`. Local Media funciona en ellas
+(solo necesita Python 3.7+), pero hay que conseguir que `apt` instale `python3-venv` y `ffmpeg`.
+
+**Opción recomendada:** grabar una tarjeta nueva con Raspberry Pi OS actual (64 bits)
+usando [Raspberry Pi Imager](https://www.raspberrypi.com/software/). Es la única que
+seguirá recibiendo actualizaciones de seguridad.
+
+**Opción rápida (seguir con Bullseye):** si `sudo apt update` se queja de los
+repositorios de Debian, apúntalos al archivo histórico y vuelve a intentarlo:
+
+```bash
+sudo cp /etc/apt/sources.list /etc/apt/sources.list.bak
+echo "deb http://archive.debian.org/debian bullseye main contrib non-free" | sudo tee /etc/apt/sources.list
+echo "deb http://archive.debian.org/debian-security bullseye-security main contrib non-free" | sudo tee -a /etc/apt/sources.list
+sudo apt update
+cd ~/Local-Media-for-Alexa && ./install.sh
+```
+
+(Para volver atrás: `sudo cp /etc/apt/sources.list.bak /etc/apt/sources.list`.)
+
 ## Funciones
 
 | My Media for Alexa | Local Media |

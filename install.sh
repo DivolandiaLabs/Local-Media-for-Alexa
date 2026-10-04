@@ -25,16 +25,39 @@ done
 say() { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
 SUDO=""; [[ $EUID -ne 0 ]] && SUDO="sudo"
 
+. /etc/os-release 2>/dev/null || true
+if [[ "${VERSION_CODENAME:-}" == "buster" || "${VERSION_CODENAME:-}" == "bullseye" ]]; then
+  printf '\n\033[1;33m!! Tu sistema es Raspberry Pi OS / Debian "%s", que ya no recibe soporte.\n' "$VERSION_CODENAME"
+  printf '   Local Media funciona igual; si apt falla mira "Raspberry Pi OS antiguo" en el README.\033[0m\n'
+fi
+
 say "Instalando dependencias del sistema (python3, ffmpeg)"
-$SUDO apt-get update -qq
-$SUDO apt-get install -y -qq python3 python3-venv python3-pip ffmpeg ca-certificates curl \
-  libjpeg-dev zlib1g-dev >/dev/null
+$SUDO apt-get update || echo "  (apt-get update ha dado errores; sigo con lo que haya)"
+# Solo se instala lo que falta: asi no se intenta actualizar paquetes ya instalados
+# (en sistemas sin soporte esas actualizaciones dan 404 y paraban la instalacion).
+missing() { for p in "$@"; do dpkg -s "$p" >/dev/null 2>&1 || echo "$p"; done; }
+NEED=$(missing python3 python3-venv python3-pip)
+if [[ -n "$NEED" ]]; then
+  $SUDO apt-get install -y --no-upgrade --fix-missing $NEED || {
+    echo "ERROR: no se pudo instalar: $NEED"
+    echo "Mira la seccion 'Raspberry Pi OS antiguo' del README."; exit 1; }
+fi
+NEED=$(missing ffmpeg ca-certificates curl)
+if [[ -n "$NEED" ]]; then
+  $SUDO apt-get install -y --no-upgrade --fix-missing $NEED || \
+    printf '\n\033[1;33m!! No se pudo instalar: %s. Sin ffmpeg, FLAC/WMA/OGG no sonaran en Alexa.\033[0m\n' "$NEED"
+fi
 
 say "Creando entorno de Python en $APP_DIR/.venv"
 sudo -u "$RUN_USER" python3 -m venv "$APP_DIR/.venv"
 sudo -u "$RUN_USER" "$APP_DIR/.venv/bin/pip" install -q --upgrade pip
 # piwheels (Raspberry Pi OS) trae ruedas ARM precompiladas: no hace falta compilar nada
-sudo -u "$RUN_USER" "$APP_DIR/.venv/bin/pip" install -q -r "$APP_DIR/requirements.txt"
+sudo -u "$RUN_USER" "$APP_DIR/.venv/bin/pip" install --prefer-binary -r "$APP_DIR/requirements.txt"
+# Opcionales: si alguno no tiene rueda para tu sistema, se sigue sin el
+for pkg in "cryptography>=40" certifi pillow; do
+  sudo -u "$RUN_USER" "$APP_DIR/.venv/bin/pip" install -q --prefer-binary "$pkg" || \
+    printf '\033[1;33m!! No se pudo instalar %s (opcional)\033[0m\n' "$pkg"
+done
 
 # Instalacion anterior con el nombre PiMedia: se para su servicio y se reutilizan sus datos
 if systemctl list-unit-files pimedia.service >/dev/null 2>&1 && [[ -f /etc/systemd/system/pimedia.service ]]; then
