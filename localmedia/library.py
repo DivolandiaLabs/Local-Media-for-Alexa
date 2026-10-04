@@ -517,9 +517,9 @@ class Library:
     def all_tracks(self, order="title", offset=0, limit=200, q=None):
         ob = {"title": "n_title", "artist": "n_artist, album_key", "album": "album_key",
               "recent": "added DESC", "year": "year DESC"}.get(order, "n_title")
-        where, args = "", []
+        where, args = "WHERE source<>'radio'", []   # las radios van en su apartado
         if q:
-            where = "WHERE n_title LIKE ? OR n_artist LIKE ? OR n_album LIKE ?"
+            where += " AND (n_title LIKE ? OR n_artist LIKE ? OR n_album LIKE ?)"
             like = f"%{norm(q)}%"
             args = [like, like, like]
         total = self.db.one(f"SELECT COUNT(*) c FROM tracks {where}", args)["c"]

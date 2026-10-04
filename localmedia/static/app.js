@@ -37,11 +37,12 @@ const P = { queue: [], idx: -1, shuffle: false, loop: false, order: [] };
 function pOrder() { P.order = P.queue.map((_, i) => i); if (P.shuffle) { const cur = P.order.splice(P.idx >= 0 ? P.idx : 0, 1); for (let i = P.order.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[P.order[i], P.order[j]] = [P.order[j], P.order[i]]; } P.order.unshift(...cur); } }
 function playList(tracks, start = 0, shuffle = false) {
   if (!tracks.length) return;
+  if (OUT) return playOnEcho(tracks, start, shuffle);   // "Reproducir en: Echo …"
   P.queue = tracks.slice(); P.shuffle = shuffle; P.idx = shuffle ? Math.floor(Math.random() * tracks.length) : start;
   if (shuffle && start) P.idx = start;
   pOrder(); playIdx(P.idx); updateBtns();
 }
-function enqueue(tracks) { if (!P.queue.length) return playList(tracks); P.queue.push(...tracks); P.order.push(...tracks.map((_, i) => P.queue.length - tracks.length + i)); toast(`Añadidas ${tracks.length} a la cola`); }
+function enqueue(tracks) { if (OUT) return playOnEcho(tracks, 0, false); if (!P.queue.length) return playList(tracks); P.queue.push(...tracks); P.order.push(...tracks.map((_, i) => P.queue.length - tracks.length + i)); toast(`Añadidas ${tracks.length} a la cola`); }
 function playIdx(i) {
   const t = P.queue[i]; if (!t) return;
   P.idx = i; audio.src = `/api/stream/${t.id}`; audio.play().catch(() => { });
@@ -64,14 +65,94 @@ audio.addEventListener("pause", () => $("#pPlay").textContent = "▶");
 let seeking = false;
 $("#pSeek").addEventListener("input", () => seeking = true);
 $("#pSeek").addEventListener("change", (e) => { const d = audio.duration || 0; if (d && isFinite(d)) audio.currentTime = (e.target.value / 1000) * d; seeking = false; });
-$("#pPlay").onclick = () => { if (!audio.src) return; audio.paused ? audio.play() : audio.pause(); };
-$("#pNext").onclick = () => step(1);
-$("#pPrev").onclick = () => audio.currentTime > 4 ? (audio.currentTime = 0) : step(-1);
-$("#pShuffle").onclick = () => { P.shuffle = !P.shuffle; pOrder(); updateBtns(); };
-$("#pLoop").onclick = () => { P.loop = !P.loop; updateBtns(); };
+// con un Echo elegido, los botones del reproductor no pueden mandar ordenes al Echo
+// (Amazon solo deja controlarlo con la voz): se explica en vez de no hacer nada
+const echoOnly = (fn) => () => OUT ? toast(`Controla ${OUT.name} con la voz: «Alexa, pausa», «Alexa, siguiente», «Alexa, aleatorio»…`, 5000) : fn();
+$("#pPlay").onclick = echoOnly(() => { if (!audio.src) return; audio.paused ? audio.play() : audio.pause(); });
+$("#pNext").onclick = echoOnly(() => step(1));
+$("#pPrev").onclick = echoOnly(() => audio.currentTime > 4 ? (audio.currentTime = 0) : step(-1));
+$("#pShuffle").onclick = echoOnly(() => { P.shuffle = !P.shuffle; pOrder(); updateBtns(); });
+$("#pLoop").onclick = echoOnly(() => { P.loop = !P.loop; updateBtns(); });
 $("#pVol").oninput = (e) => audio.volume = e.target.value / 100;
-$("#pQueue").onclick = showQueue;
-$("#pAlexa").onclick = () => P.queue.length ? sendToAlexa(P.queue.map((t) => t.id), "la cola del navegador", P.shuffle, P.idx) : toast("La cola está vacía");
+$("#pQueue").onclick = () => OUT ? echoQueue() : showQueue();
+
+// ============================================================ "Reproducir en:" (navegador o Echo)
+let OUT = null;   // {id, name} del Echo elegido o null = este navegador
+try { OUT = JSON.parse(localStorage.getItem("lm-out") || "null"); } catch (e) { OUT = null; }
+const devName = (d) => d.name || `Echo …${d.id.slice(-6)}`;
+function setOut(o) {
+  OUT = o;
+  try { o ? localStorage.setItem("lm-out", JSON.stringify(o)) : localStorage.removeItem("lm-out"); } catch (e) { }
+  $("#pOutIc").textContent = o ? "🔊" : "💻";
+  $("#pOutLb").textContent = o ? o.name : "Este navegador";
+  $("#pOut").classList.toggle("on", !!o);
+  $("#pOut").title = o ? `Suena en ${o.name} · pulsa para cambiar` : "Elegir dónde suena";
+  document.body.classList.toggle("out-echo", !!o);
+  clearTimeout(setOut._t);
+  if (o) { if (!audio.paused) audio.pause(); pollEcho(); }
+  else if (P.queue[P.idx]) playIdxInfo(P.queue[P.idx]);
+  else { $("#npTitle").textContent = "Nada sonando"; $("#npSub").textContent = ""; $("#npArt").src = "/static/cover.svg"; }
+}
+function playIdxInfo(t) {
+  $("#npTitle").textContent = t.title; $("#npSub").textContent = [t.artist, t.album].filter(Boolean).join(" — "); $("#npArt").src = art(t.id);
+}
+async function playOnEcho(tracks, start = 0, shuffle = false) {
+  const ids = tracks.map((t) => t.id);
+  const first = tracks[start] || tracks[0];
+  const desc = tracks.length === 1 ? first.title
+    : shuffle ? `${tracks.length} canciones en aleatorio` : `${first.title} y ${tracks.length - 1} más`;
+  try {
+    await api(`/api/devices/${enc(OUT.id)}/queue`, { method: "POST", body: { track_ids: ids, desc, shuffle, first: shuffle ? null : start } });
+  } catch (e) { return toast("No se pudo preparar la cola en el Echo"); }
+  toast(`Listo en ${OUT.name}. Dile: «Alexa, abre mi colección»`, 6000);
+  pollEcho();
+}
+async function pollEcho() {
+  clearTimeout(setOut._t);
+  if (!OUT) return;
+  try {
+    const d = (await api("/api/devices")).find((x) => x.id === OUT.id);
+    if (d && devName(d) !== OUT.name) setOut({ id: d.id, name: devName(d) });   // lo renombraste
+    if (d && d.current) {
+      $("#npTitle").textContent = d.current.title;
+      $("#npArt").src = art(d.current.id);
+      $("#npSub").textContent = d.playing ? `🔊 Sonando en ${OUT.name}`
+        : d.pending ? `Preparado en ${OUT.name} · di «Alexa, abre mi colección»` : `En pausa en ${OUT.name}`;
+    } else {
+      $("#npTitle").textContent = "Nada sonando"; $("#npArt").src = "/static/cover.svg";
+      $("#npSub").textContent = `🔊 ${OUT.name}`;
+    }
+  } catch (e) { }
+  setOut._t = setTimeout(pollEcho, 5000);
+}
+async function echoQueue() {
+  const d = await api(`/api/devices/${enc(OUT.id)}/queue`);
+  if (!d.tracks.length) return toast(`La cola de ${OUT.name} está vacía`);
+  const box = modal(`<h2 style="margin-top:0">Cola de ${esc(OUT.name)}</h2>${trackTable(d.tracks)}`);
+  box.querySelectorAll("tr[data-i]")[d.pos]?.classList.add("playing");
+}
+$("#pOut").onclick = async () => {
+  let devs = [];
+  try { devs = await api("/api/devices"); } catch (e) { }
+  const row = (id, ic, name, sub, sel) => `<div class="item out-opt${sel ? " sel" : ""}" data-out="${esc(id)}"><div style="font-size:24px">${ic}</div><div class="grow"><div class="t">${esc(name)}</div><div class="s">${esc(sub)}</div></div>${sel ? '<span class="ok" style="font-size:20px">✔</span>' : ""}</div>`;
+  const b = modal(`<h2 style="margin-top:0">Reproducir en…</h2>
+    <div class="list">${row("", "💻", "Este navegador", "Suena en este ordenador o móvil", !OUT)}
+    ${devs.map((d) => row(d.id, "🔊", devName(d), d.playing ? "Sonando ahora" : `Visto ${ago(d.last_seen)}`, OUT && OUT.id === d.id)).join("")}</div>
+    ${devs.length ? "" : '<p class="muted">Aún no conozco ningún Echo. Habla una vez con la skill desde cada uno (“Alexa, abre mi colección”) y aparecerá aquí.</p>'}
+    <p class="hint">Con un Echo elegido, al pulsar una canción, un álbum o una lista se prepara en ese Echo y basta con decirle <b>“Alexa, abre mi colección”</b>: Amazon no deja que una skill empiece a sonar sin que se lo pidas. Ponles nombre a tus Echo en <a href="#/alexa" onclick="closeModal()">🔊 Alexa</a>.</p>`);
+  b.querySelectorAll("[data-out]").forEach((el) => el.onclick = async () => {
+    const id = el.dataset.out;
+    if (!id) { setOut(null); closeModal(); return toast("Suena en este navegador"); }
+    const d = devs.find((x) => x.id === id);
+    const carry = P.queue.length && !audio.paused;
+    const queue = P.queue, idx = P.idx;
+    setOut({ id, name: devName(d) });
+    closeModal();
+    if (carry) playOnEcho(queue, idx, false);   // lo que sonaba en el navegador pasa al Echo
+    else toast(`Ahora se reproduce en ${OUT.name}`);
+  });
+};
+setOut(OUT);
 function updateBtns() { $("#pShuffle").classList.toggle("on", P.shuffle); $("#pLoop").classList.toggle("on", P.loop); }
 if ("mediaSession" in navigator) { navigator.mediaSession.setActionHandler("nexttrack", () => step(1)); navigator.mediaSession.setActionHandler("previoustrack", () => step(-1)); }
 function showQueue() {
