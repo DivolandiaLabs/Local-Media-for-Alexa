@@ -232,11 +232,13 @@ def build(locale="es-ES", names=None, per_type=2500):
         {"id": str(y), "name": {"value": syn[0], "synonyms": syn[1:]}}
         for y, syn in DECADES[lang]]})
 
+    lm = {"invocationName": INVOCATION[lang], "intents": intents, "types": types}
     # Sensibilidad baja del FallbackIntent: con nombres de musica raros, Alexa prefiere
     # mandar la frase a la skill (que busca por parecido) antes que decir "no te entiendo".
-    return {"interactionModel": {"languageModel": {
-        "invocationName": INVOCATION[lang], "intents": intents, "types": types,
-        "modelConfiguration": {"fallbackIntentSensitivity": {"level": "LOW"}}}}}
+    # Amazon solo lo permite en ingles y aleman ("Unsupported model configuration").
+    if locale.lower().startswith(("en", "de")):
+        lm["modelConfiguration"] = {"fallbackIntentSensitivity": {"level": "LOW"}}
+    return {"interactionModel": {"languageModel": lm}}
 
 
 ALL_LOCALES = ("es-ES", "es-MX", "es-US", "en-US", "en-GB", "en-CA", "en-AU", "en-IN")
