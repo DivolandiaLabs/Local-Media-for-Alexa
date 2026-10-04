@@ -23,7 +23,14 @@ U = {
         "PlaySongIntent": ["pon la canción {song}", "reproduce la canción {song}",
                            "pon la canción {song} de {artist}", "pon el tema {song}",
                            "pon el tema {song} de {artist}", "quiero escuchar la canción {song}",
-                           "reproduce el tema {song}"],
+                           "reproduce el tema {song}",
+                           "reproduce la pista {song}", "pon la pista {song}",
+                           "reproduce la pista {song} de {artist}", "quiero escuchar la pista {song}",
+                           "reproduce el audio {song}", "pon el audio {song}",
+                           "quiero escuchar el audio {song}", "reproduce la grabación {song}",
+                           "pon la grabación {song}", "reproduce la meditación {song}",
+                           "pon la meditación {song}", "abre la pista {song}",
+                           "abre el audio {song}"],
         "PlayGenreIntent": ["pon música {genre}", "pon el género {genre}",
                             "reproduce música {genre}", "pon música del género {genre}",
                             "quiero escuchar música {genre}"],
@@ -70,7 +77,9 @@ U = {
                             "play album {album} by {artist}", "i want to hear the album {album}"],
         "PlaySongIntent": ["play the song {song}", "play song {song}",
                            "play the song {song} by {artist}", "play the track {song}",
-                           "play the track {song} by {artist}", "i want to hear the song {song}"],
+                           "play the track {song} by {artist}", "i want to hear the song {song}",
+                           "play the audio {song}", "play the recording {song}",
+                           "play the meditation {song}", "open the track {song}"],
         "PlayGenreIntent": ["play {genre} music", "play the genre {genre}", "play genre {genre}",
                             "play some {genre} music", "play {genre} songs"],
         "PlayPlaylistIntent": ["play the playlist {playlist}", "play playlist {playlist}",
@@ -106,7 +115,8 @@ U = {
 
 # conjugaciones para "Alexa, pide a mi colección que PONGA..."
 SUBJ = {"pon ": "ponga ", "reproduce ": "reproduzca ", "busca ": "busque ",
-        "toca ": "toque ", "mezcla ": "mezcle ", "sorpréndeme": "me sorprenda"}
+        "toca ": "toque ", "mezcla ": "mezcle ", "abre ": "abra ",
+        "sorpréndeme": "me sorprenda"}
 
 SLOTS = {
     "PlayArtistIntent": {"artist": "ARTIST_NAME"},

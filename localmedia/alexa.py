@@ -7,6 +7,7 @@ import threading
 import time
 
 from .i18n import T
+from .library import spoken_title
 from .media import needs_transcode
 
 log = logging.getLogger("localmedia.alexa")
@@ -173,8 +174,11 @@ class AlexaSkill:
         user_id = system.get("user", {}).get("userId")
         rtype = req.get("type", "")
         name = req.get("intent", {}).get("name") if rtype == "IntentRequest" else None
-        self.last_requests = ([{"t": time.time(), "type": rtype, "intent": name,
-                                "device": device_id[-12:]}] + self.last_requests)[:30]
+        entry = {"t": time.time(), "type": rtype, "intent": name, "device": device_id[-12:]}
+        if rtype in ("AudioPlayer.PlaybackFailed", "System.ExceptionEncountered"):
+            err = req.get("error") or {}
+            entry["error"] = f"{err.get('type', '')} {err.get('message', '')}".strip()
+        self.last_requests = ([entry] + self.last_requests)[:30]
         log.info("Alexa %s %s", rtype, name or "")
         t = T(req.get("locale") or "es-ES")
         with self.lock:
@@ -228,7 +232,7 @@ class AlexaSkill:
         if expected and behavior == "ENQUEUE":
             stream["expectedPreviousToken"] = expected
         sub = " — ".join(x for x in (tr["artist"] or tr["album_artist"], tr["album"]) if x)
-        meta = {"title": tr["title"] or "", "subtitle": sub}
+        meta = {"title": spoken_title(tr["title"]) or "", "subtitle": sub}
         has_art = bool(tr.get("art_url")) if tr["source"] == "upnp" else \
             self.lib.art_for(tr) is not None
         if has_art:
@@ -351,7 +355,21 @@ class Ctx:
         tracks = self.lib.album_tracks(a["key"])
         art = tracks[0]["album_artist"] or tracks[0]["artist"] if tracks else ""
         by = self.t("by", artist=art) if art else ""
+        if len(tracks) == 1:
+            return self._start(tracks, self.t("playing_song",
+                                              name=spoken_title(tracks[0]["title"]), by=by))
         return self._start(tracks, self.t("playing_album", name=a["name"], by=by))
+
+    def _play_track(self, tr):
+        """Una pista concreta y despues el resto de su album/carpeta en orden
+        (como abrir el archivo desde la carpeta)."""
+        tracks = self.lib.album_tracks(tr["album_key"]) or [tr]
+        first = next((i for i, x in enumerate(tracks) if x["id"] == tr["id"]), None)
+        if first is None:
+            tracks, first = [tr], 0
+        by = self.t("by", artist=tr["artist"]) if tr["artist"] else ""
+        return self._start(tracks, self.t("playing_song", name=spoken_title(tr["title"]), by=by),
+                           first=first)
 
     def i_PlaySongIntent(self, intent):
         q = self._slot(intent, "song")
@@ -361,13 +379,7 @@ class Ctx:
         res = self.lib.find_song(q, artist)
         if not res:
             return self._not_found("song", q)
-        tr = res[0][1]
-        # despues de la cancion, mas del mismo artista
-        more = [x for x in self.lib.artist_tracks(tr["n_artist"]) if x["id"] != tr["id"]] \
-            if tr["n_artist"] else []
-        random.shuffle(more)
-        by = self.t("by", artist=tr["artist"]) if tr["artist"] else ""
-        return self._start([tr] + more, self.t("playing_song", name=tr["title"], by=by))
+        return self._play_track(res[0][1])
 
     def i_PlayGenreIntent(self, intent):
         q = self._slot(intent, "genre")
@@ -468,12 +480,7 @@ class Ctx:
             return self._not_found("any", q)
         kind, name, tracks = r
         if kind == "song" and tracks:
-            tr = tracks[0]
-            more = [x for x in self.lib.artist_tracks(tr["n_artist"]) if x["id"] != tr["id"]] \
-                if tr["n_artist"] else []
-            random.shuffle(more)
-            by = self.t("by", artist=tr["artist"]) if tr["artist"] else ""
-            return self._start([tr] + more, self.t("playing_song", name=name, by=by))
+            return self._play_track(tracks[0])
         key = {"artist": "playing_artist", "album": "playing_album", "genre": "playing_genre",
                "playlist": "playing_playlist"}[kind]
         return self._start(tracks, self.t(key, name=name, by=""),
@@ -521,8 +528,9 @@ class Ctx:
             return response(self.t("nothing_playing"))
         by = self.t("by", artist=tr["artist"]) if tr["artist"] else ""
         album = self.t("np_album", album=tr["album"]) if tr["album"] else ""
-        text = self.t("now_playing", title=tr["title"], by=by, album=album)
-        return response(text, card=(tr["title"], f"{tr['artist']}\n{tr['album']}"))
+        title = spoken_title(tr["title"])
+        text = self.t("now_playing", title=title, by=by, album=album)
+        return response(text, card=(title, f"{tr['artist']}\n{tr['album']}"))
 
     # ---- integrados de Amazon
     def i_amz_HelpIntent(self, intent):

@@ -106,6 +106,18 @@ def title_from_filename(path):
     return name.replace("_", " ").strip() or os.path.basename(path)
 
 
+def spoken_title(title):
+    """Titulo para decirlo y buscarlo por voz: sin numero de pista delante ni guiones
+    de nombre de archivo ("1-control-de-sueno" -> "control de sueno")."""
+    t = (title or "").strip()
+    if re.match(r"^[\w.]+([-_][\w.]+)+$", t):     # parece un nombre de archivo
+        t = re.sub(r"^\d{1,3}[-_.]+", "", t)       # "1-control..." -> "control..."
+        t = re.sub(r"[-_]+", " ", t)
+    else:
+        t = re.sub(r"^\d{1,3}\s*[-.)]\s+", "", t)  # "01 - Titulo", "3. Titulo"
+    return t.strip() or (title or "")
+
+
 def _cover_file(folder):
     try:
         files = os.listdir(folder)
@@ -172,6 +184,20 @@ class Library:
         self._scan_lock = threading.Lock()
         self._names_cache = None
         self.on_scan_done = None  # lo pone __main__ (subir el modelo de voz a Amazon)
+        self._migrate_titles()
+
+    def _migrate_titles(self):
+        """v1.1: n_title se calcula sobre el titulo hablado. Se recalcula una vez para las
+        pistas ya escaneadas (el escaneo incremental no vuelve a leer archivos sin cambios)."""
+        if self.db.meta_get("ntitle_v") == "2":
+            return
+        rows = self.db.q("SELECT id, title FROM tracks")
+        with self.db.write_lock:
+            c = self.db.conn()
+            c.executemany("UPDATE tracks SET n_title=? WHERE id=?",
+                          [(norm(spoken_title(r["title"])), r["id"]) for r in rows])
+            c.commit()
+        self.db.meta_set("ntitle_v", "2")
 
     # ------------------------------------------------------------ escaneo
     def start_scan(self, full=False):
@@ -300,7 +326,7 @@ class Library:
             "year": t.get("year"), "track_no": t.get("track_no"), "disc_no": t.get("disc_no"),
             "duration": t.get("duration"), "bitrate": t.get("bitrate"), "ext": ext,
             "codec": t.get("codec"), "size": stt.st_size, "mtime": stt.st_mtime,
-            "album_key": akey, "n_title": norm(title), "n_artist": norm(artist),
+            "album_key": akey, "n_title": norm(spoken_title(title)), "n_artist": norm(artist),
             "n_album_artist": norm(aartist), "n_album": norm(album),
             "n_genre": norm(t.get("genre") or ""),
         }
@@ -710,7 +736,8 @@ class Library:
             cands.append((a[0][0] + 0.02, "artist", a[0][2], lambda: self.artist_tracks(a[0][1])))
         al = self.find_album(q)
         if al:
-            cands.append((al[0][0], "album", al[0][1]["name"],
+            # -0.03: si una pista se llama igual que su album, gana la pista
+            cands.append((al[0][0] - 0.03, "album", al[0][1]["name"],
                           lambda: self.album_tracks(al[0][1]["key"])))
         pl = self.find_playlist(q)
         if pl:
@@ -721,17 +748,21 @@ class Library:
             cands.append((g[0][0] - 0.01, "genre", g[0][2], lambda: self.genre_tracks(g[0][1])))
         s = self.find_song(q)
         if s:
-            cands.append((s[0][0] - 0.02, "song", s[0][1]["title"], lambda: [s[0][1]]))
+            cands.append((s[0][0] - 0.02, "song", spoken_title(s[0][1]["title"]),
+                          lambda: [s[0][1]]))
         if not cands:
             return None
         cands.sort(key=lambda c: -c[0])
         sc, kind, name, fn = cands[0]
-        return kind, name, fn()
+        tracks = fn()
+        if kind == "album" and len(tracks) == 1:   # un "album" de una sola pista es una pista
+            return "song", spoken_title(tracks[0]["title"]), tracks
+        return kind, name, tracks
 
     def names_for_model(self, limit=2500):
         n = self._names()
         albums = sorted({a["name"] for a in n["albums"] if a["name"]})
-        titles = [r["title"] for r in self.db.q(
+        titles = [spoken_title(r["title"]) for r in self.db.q(
             "SELECT title FROM tracks LEFT JOIN plays ON plays.track_id=tracks.id "
             "GROUP BY n_title ORDER BY COALESCE(MAX(plays.count),0) DESC, n_title LIMIT ?",
             (limit,))]
