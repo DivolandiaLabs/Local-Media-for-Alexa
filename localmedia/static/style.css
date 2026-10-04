@@ -160,3 +160,12 @@ a.stat.link:hover,a.stat.link:focus-visible{border-color:var(--accent);backgroun
 a.stat.link .go{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:22px;color:var(--muted)}
 a.stat.link:hover .go,a.stat.link:focus-visible .go{color:var(--accent)}
 @media (prefers-reduced-motion: reduce){a.stat.link{transition:none}a.stat.link:hover{transform:none}}
+/* boton redondo "?" con explicacion desplegable */
+.info-wrap{margin:14px 0 8px}
+.info-btn{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--accent);background:transparent;color:var(--accent);font-weight:700;font-size:13px;line-height:1;cursor:pointer;vertical-align:1px;margin-left:4px;padding:0}
+.info-btn:hover,.info-btn:focus-visible,.info-btn[aria-expanded="true"]{background:var(--accent);color:var(--bg);outline:none}
+.info-pop{display:none;margin:10px 0 4px;padding:12px 16px;border:1px solid var(--accent);border-radius:10px;background:var(--panel2);font-size:14px;max-width:720px}
+.info-pop p{margin:0 0 8px}
+.info-pop ul{margin:0;padding-left:20px}
+.info-pop li{margin:4px 0}
+.info-pop.open{display:block}

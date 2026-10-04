@@ -341,7 +341,16 @@ const views = {
         <div class="panel" style="margin-top:8px"><b>Opción A — Túnel rápido de Cloudflare</b> (recomendado: gratis, sin cuenta, sin dominio, sin límite de datos y sin tocar el router). En la terminal de la Raspberry, dentro de la carpeta de Local Media:<pre class="code">./install.sh --cloudflare</pre>
         <span class="hint">La dirección (<code>xxx.trycloudflare.com</code>) cambia cada vez que se reinicia la Pi, pero Local Media la detecta sola y, si has conectado con Amazon, actualiza la skill automáticamente.${tunnelUrl ? ` Ahora mismo: <code>${esc(tunnelUrl)}</code>` : ""}</span>
         <p class="hint">⚠ Los dominios gratuitos de ngrok (<code>*.ngrok-free.dev</code>) no funcionan con Alexa: Amazon no llega a conectar.</p>
-        <p><b>Opción B — Cloudflare Tunnel</b> con un dominio propio (dirección fija):</p><pre class="code">cloudflared tunnel login
+        <div class="info-wrap"><p style="margin:0"><b>Opción B — Cloudflare Tunnel</b> con un dominio propio (dirección fija): <button type="button" class="info-btn" aria-expanded="false" aria-controls="infoB" aria-label="¿Qué cuesta la Opción B?">?</button></p>
+        <div class="info-pop" id="infoB" role="note">
+          <p><b>El túnel de Cloudflare es gratis</b>, igual que en la Opción A. Lo único que se paga es el <b>dominio</b>: tu propia dirección de Internet (p. ej. <code>tunombre.com</code>).</p>
+          <ul>
+            <li><b>Precio:</b> desde unos pocos euros al año según la terminación; un <code>.com</code> ronda los 10 € al año.</li>
+            <li><b>Dónde comprarlo:</b> lo más sencillo es en el propio Cloudflare (<a href="https://dash.cloudflare.com/?to=/:account/domains/register" target="_blank" rel="noopener">Cloudflare Registrar</a>, a precio de coste). Si ya tienes uno en otra tienda, también vale pasándolo a Cloudflare.</li>
+            <li><b>Qué ganas:</b> una dirección fija y con tu nombre (p. ej. <code>musica.tunombre.com</code>) que no cambia al reiniciar la Raspberry, y un túnel pensado para uso continuo.</li>
+            <li><b>¿Hace falta?</b> No. Con la Opción A, Local Media detecta la dirección nueva tras cada reinicio y actualiza la skill solo, sin pagar nada.</li>
+          </ul>
+        </div></div><pre class="code">cloudflared tunnel login
 cloudflared tunnel create localmedia
 cloudflared tunnel route dns localmedia musica.TU-DOMINIO.com
 cloudflared tunnel run --url http://localhost:${c.public_port} localmedia</pre>
@@ -619,3 +628,14 @@ $("#loginForm").onsubmit = async (e) => {
   if (a.required && !a.ok) return showLogin();
   await loadFavs(); route(); pollScan();
 })();
+
+// botones redondos "?": abren/cierran su explicacion
+document.addEventListener("click", (e) => {
+  const b = e.target.closest(".info-btn");
+  if (!b) return;
+  const pop = document.getElementById(b.getAttribute("aria-controls"));
+  if (!pop) return;
+  const open = !pop.classList.contains("open");
+  pop.classList.toggle("open", open);
+  b.setAttribute("aria-expanded", String(open));
+});
