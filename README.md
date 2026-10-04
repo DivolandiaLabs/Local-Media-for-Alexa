@@ -1,4 +1,4 @@
-# Local Media — tu música de la Raspberry Pi en Alexa
+# Local Media for Alexa — tu música de la Raspberry Pi en Alexa
 
 Alternativa libre y autoalojada a *My Media for Alexa* para **Raspberry Pi / Linux ARM**
 (funciona también en cualquier Linux x86 o con Docker).

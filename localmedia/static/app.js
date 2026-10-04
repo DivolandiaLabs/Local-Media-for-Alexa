@@ -46,7 +46,7 @@ function playIdx(i) {
   const t = P.queue[i]; if (!t) return;
   P.idx = i; audio.src = `/api/stream/${t.id}`; audio.play().catch(() => { });
   $("#npTitle").textContent = t.title; $("#npSub").textContent = [t.artist, t.album].filter(Boolean).join(" — ");
-  $("#npArt").src = art(t.id); document.title = `${t.title} · Local Media`;
+  $("#npArt").src = art(t.id); document.title = `${t.title} · Local Media for Alexa`;
   if ("mediaSession" in navigator) navigator.mediaSession.metadata = new MediaMetadata({ title: t.title, artist: t.artist, album: t.album, artwork: [{ src: art(t.id) }] });
   document.querySelectorAll("tr[data-tid]").forEach((tr) => tr.classList.toggle("playing", +tr.dataset.tid === t.id));
 }
@@ -386,7 +386,7 @@ cloudflared tunnel run --url http://localhost:${c.public_port} localmedia</pre>
       <p class="hint">Los cambios de puerto se aplican al reiniciar: <code>sudo systemctl restart localmedia</code></p></div>
 
     <div class="actions"><button class="btn primary" id="save">💾 Guardar ajustes</button></div>
-    <p class="muted" style="margin-top:20px;font-size:13px">Local Media ${esc(s.version)} · etiquetas: ${s.mutagen ? "mutagen OK" : "<span class='err'>falta mutagen</span>"}</p>`;
+    <p class="muted" style="margin-top:20px;font-size:13px">Local Media for Alexa ${esc(s.version)} · etiquetas: ${s.mutagen ? "mutagen OK" : "<span class='err'>falta mutagen</span>"}</p>`;
     let folders = c.music_folders.slice(), servers = (c.upnp_servers || []).slice();
     const drawFolders = () => $("#folders").innerHTML = folders.map((f, i) => `<div class="item"><span>📁</span><div class="grow t">${esc(f)}</div><button class="icon-btn" data-rm="${i}">✕</button></div>`).join("") || '<p class="muted">Ninguna carpeta todavía.</p>';
     const drawServers = () => $("#upnpList").innerHTML = servers.map((sv, i) => `<label class="check"><input type="checkbox" data-sv="${i}" ${sv.enabled !== false ? "checked" : ""}> ${esc(sv.name)} <span class="muted" style="font-size:12px">${esc(sv.location)}</span> <button class="icon-btn" data-svrm="${i}">✕</button></label>`).join("");
@@ -436,7 +436,7 @@ async function drawAmazon() {
     html = `<p>Amazon pide que crees una vez un <b>perfil de seguridad</b>: es el permiso para que Local Media cree la skill en tu cuenta. Son 2 minutos:</p>
     <ol class="sub">
       <li>Abre <a href="https://developer.amazon.com/loginwithamazon/console/site/lwa/overview.html" target="_blank" rel="noopener">Login with Amazon</a> con la misma cuenta de Amazon que tus Echo y pulsa <b>Create a New Security Profile</b>.</li>
-      <li>Rellena <b>Name</b>: <code>Local Media</code>, <b>Description</b>: <code>Mi música en Alexa</code>, y en <b>Consent Privacy Notice URL</b> pega:${copyRow(a.privacy_url)}Pulsa <b>Save</b>.</li>
+      <li>Rellena <b>Name</b>: <code>Local Media for Alexa</code>, <b>Description</b>: <code>Mi música en Alexa</code>, y en <b>Consent Privacy Notice URL</b> pega:${copyRow(a.privacy_url)}Pulsa <b>Save</b>.</li>
       <li>En el perfil nuevo abre <b>Web Settings</b> → <b>Edit</b>, y en <b>Allowed Return URLs</b> pega:${copyRow(a.redirect_uri)}Pulsa <b>Save</b>.</li>
       <li>En esa misma pantalla están el <b>Client ID</b> y el <b>Client Secret</b> (pulsa <i>Show Secret</i>). Pégalos aquí:</li>
     </ol>

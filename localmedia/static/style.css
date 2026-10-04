@@ -151,3 +151,6 @@ details.manual summary{cursor:pointer}
 .main{min-width:0;overflow-x:hidden}
 .main a,.main p,.main li{overflow-wrap:anywhere}
 .main input{max-width:100%}
+/* nombre: "for Alexa" mas suave para que quepa en la barra */
+.brand{line-height:1.15}
+.brand-sub{font-weight:500;color:var(--muted);white-space:nowrap}
