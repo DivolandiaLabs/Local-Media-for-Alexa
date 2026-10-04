@@ -696,13 +696,19 @@ class Library:
         if not nq:
             return []
         words = [w for w in nq.split() if len(w) > 2] or nq.split()
-        # prefiltro en SQL por la palabra mas larga
-        w = max(words, key=len)
-        cand = self.db.q("SELECT * FROM tracks WHERE n_title LIKE ? LIMIT 3000", (f"%{w}%",))
-        if len(cand) < 5:
-            cand = self.db.q("SELECT * FROM tracks WHERE n_title LIKE ? LIMIT 3000",
-                             (f"%{nq[:3]}%",))
-        res = best(q, cand, key=lambda t: t["n_title"], threshold=0.6, limit=30)
+        # prefiltro en SQL: pistas que contienen ALGUNA de las palabras (las 4 mas largas).
+        # Sumar y no sustituir: con "la pista control de sueno" la palabra "pista" no
+        # esta en ningun titulo, pero "control" si.
+        cand = {}
+        for w in sorted(set(words), key=len, reverse=True)[:4]:
+            for r in self.db.q("SELECT * FROM tracks WHERE n_title LIKE ? LIMIT 2000",
+                               (f"%{w}%",)):
+                cand[r["id"]] = r
+        if len(cand) < 5:   # nada parecido por palabras: probar por el principio
+            for r in self.db.q("SELECT * FROM tracks WHERE n_title LIKE ? LIMIT 2000",
+                               (f"%{nq[:3]}%",)):
+                cand[r["id"]] = r
+        res = best(q, cand.values(), key=lambda t: t["n_title"], threshold=0.6, limit=30)
         if artist_q:
             from .textnorm import score
             na = norm(artist_q)

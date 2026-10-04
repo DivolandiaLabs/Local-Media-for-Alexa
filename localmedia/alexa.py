@@ -471,11 +471,50 @@ class Ctx:
         return self._start(self.lib.year_tracks(y, y + 9), self.t("playing_year", name=label),
                            shuffle=True) or self._not_found("year", label)
 
+    # "pon {lo que sea}": si empieza por "la pista", "el album"... se manda al intent concreto
+    # (Alexa a veces mete la frase entera en el SearchQuery: "la pista control de sueno").
+    KIND_WORDS = [
+        ("song", ["la pista", "pista", "el audio", "audio", "la cancion", "cancion", "el tema",
+                  "la grabacion", "grabacion", "la meditacion", "meditacion", "the song",
+                  "the track", "track", "the audio", "the recording", "the meditation"]),
+        ("album", ["el album", "album", "el disco", "disco", "the album", "the record"]),
+        ("playlist", ["la lista de reproduccion", "la lista", "lista", "la playlist", "playlist",
+                      "the playlist"]),
+        ("folder", ["la carpeta", "carpeta", "the folder", "folder"]),
+        ("artist", ["musica de", "canciones de", "al artista", "al grupo", "music by",
+                    "songs by"]),
+    ]
+    KIND_INTENT = {"song": ("PlaySongIntent", "song"), "album": ("PlayAlbumIntent", "album"),
+                   "playlist": ("PlayPlaylistIntent", "playlist"),
+                   "folder": ("PlayFolderIntent", "folder"),
+                   "artist": ("PlayArtistIntent", "artist")}
+
+    def _split_kind(self, q):
+        import unicodedata
+        plain = "".join(c for c in unicodedata.normalize("NFKD", q.lower())
+                        if not unicodedata.combining(c))
+        words = q.split()
+        for kind, prefixes in self.KIND_WORDS:
+            for p in sorted(prefixes, key=len, reverse=True):
+                if plain.startswith(p + " ") and len(words) > len(p.split()):
+                    return kind, " ".join(words[len(p.split()):])
+        return None, q
+
     def i_PlayAnythingIntent(self, intent):
         q = self._slot(intent, "query", resolved=False)
         if not q:
             return response(self.t("not_understood"), self.t("welcome_reprompt"), end=False)
+        kind, rest = self._split_kind(q)
+        routed = None
+        if kind:
+            name, slot = self.KIND_INTENT[kind]
+            routed = getattr(self, "i_" + name)({"name": name, "slots": {slot: {"value": rest}}})
+            if routed["response"].get("directives"):
+                return routed
+            # nada con ese tipo (p. ej. un album llamado "Disco Inferno"): frase completa
         r = self.lib.resolve_any(q)
+        if not r and routed:
+            return routed
         if not r:
             return self._not_found("any", q)
         kind, name, tracks = r
