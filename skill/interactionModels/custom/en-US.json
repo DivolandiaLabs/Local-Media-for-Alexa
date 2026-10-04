@@ -1,0 +1,612 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "my collection",
+      "intents": [
+        {
+          "name": "PlayArtistIntent",
+          "samples": [
+            "play music by {artist}",
+            "play songs by {artist}",
+            "play the artist {artist}",
+            "play the band {artist}",
+            "play something by {artist}",
+            "i want to hear {artist}",
+            "play artist {artist}",
+            "shuffle {artist}",
+            "play tracks by {artist}"
+          ],
+          "slots": [
+            {
+              "name": "artist",
+              "type": "ARTIST_NAME"
+            }
+          ]
+        },
+        {
+          "name": "PlayAlbumIntent",
+          "samples": [
+            "play the album {album}",
+            "play album {album}",
+            "play the record {album}",
+            "play the album {album} by {artist}",
+            "play album {album} by {artist}",
+            "i want to hear the album {album}"
+          ],
+          "slots": [
+            {
+              "name": "album",
+              "type": "ALBUM_NAME"
+            },
+            {
+              "name": "artist",
+              "type": "ARTIST_NAME"
+            }
+          ]
+        },
+        {
+          "name": "PlaySongIntent",
+          "samples": [
+            "play the song {song}",
+            "play song {song}",
+            "play the song {song} by {artist}",
+            "play the track {song}",
+            "play the track {song} by {artist}",
+            "i want to hear the song {song}"
+          ],
+          "slots": [
+            {
+              "name": "song",
+              "type": "SONG_NAME"
+            },
+            {
+              "name": "artist",
+              "type": "ARTIST_NAME"
+            }
+          ]
+        },
+        {
+          "name": "PlayGenreIntent",
+          "samples": [
+            "play {genre} music",
+            "play the genre {genre}",
+            "play genre {genre}",
+            "play some {genre} music",
+            "play {genre} songs"
+          ],
+          "slots": [
+            {
+              "name": "genre",
+              "type": "GENRE_NAME"
+            }
+          ]
+        },
+        {
+          "name": "PlayPlaylistIntent",
+          "samples": [
+            "play the playlist {playlist}",
+            "play playlist {playlist}",
+            "play my playlist {playlist}",
+            "play my {playlist} playlist",
+            "play the {playlist} playlist"
+          ],
+          "slots": [
+            {
+              "name": "playlist",
+              "type": "PLAYLIST_NAME"
+            }
+          ]
+        },
+        {
+          "name": "PlayFolderIntent",
+          "samples": [
+            "play the folder {folder}",
+            "play folder {folder}",
+            "play the {folder} folder"
+          ],
+          "slots": [
+            {
+              "name": "folder",
+              "type": "FOLDER_NAME"
+            }
+          ]
+        },
+        {
+          "name": "PlayYearIntent",
+          "samples": [
+            "play music from {year}",
+            "play songs from {year}",
+            "play music from the year {year}",
+            "play songs from the year {year}"
+          ],
+          "slots": [
+            {
+              "name": "year",
+              "type": "AMAZON.FOUR_DIGIT_NUMBER"
+            }
+          ]
+        },
+        {
+          "name": "PlayDecadeIntent",
+          "samples": [
+            "play music from the {decade}",
+            "play songs from the {decade}",
+            "play hits from the {decade}",
+            "play {decade} music"
+          ],
+          "slots": [
+            {
+              "name": "decade",
+              "type": "DECADE"
+            }
+          ]
+        },
+        {
+          "name": "ShuffleAllIntent",
+          "samples": [
+            "play all my music",
+            "shuffle all my music",
+            "play some music",
+            "play music",
+            "shuffle my library",
+            "surprise me",
+            "play everything",
+            "play random music",
+            "shuffle everything"
+          ]
+        },
+        {
+          "name": "PlayRecentIntent",
+          "samples": [
+            "play recently added music",
+            "play my newest music",
+            "play what i added recently",
+            "play the latest albums",
+            "play new music"
+          ]
+        },
+        {
+          "name": "PlayFavoritesIntent",
+          "samples": [
+            "play my favorites",
+            "play my favourites",
+            "play my favorite songs",
+            "play my favourite music"
+          ]
+        },
+        {
+          "name": "PlayMostPlayedIntent",
+          "samples": [
+            "play my most played songs",
+            "play my most played music",
+            "play what i listen to most",
+            "play my top songs"
+          ]
+        },
+        {
+          "name": "PlayMoreByArtistIntent",
+          "samples": [
+            "play more by this artist",
+            "more by this artist",
+            "play more from this band",
+            "play more songs by this artist"
+          ]
+        },
+        {
+          "name": "PlayCurrentAlbumIntent",
+          "samples": [
+            "play this album",
+            "play the whole album",
+            "play the full album",
+            "play the rest of this album"
+          ]
+        },
+        {
+          "name": "WhatIsPlayingIntent",
+          "samples": [
+            "what's playing",
+            "what is playing",
+            "what song is this",
+            "what is this song",
+            "who sings this",
+            "what's this song",
+            "who is this"
+          ]
+        },
+        {
+          "name": "PlayAnythingIntent",
+          "samples": [
+            "play {query}",
+            "i want to hear {query}",
+            "search for {query}",
+            "find {query}",
+            "put on {query}"
+          ],
+          "slots": [
+            {
+              "name": "query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ]
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.PauseIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.ResumeIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NextIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.PreviousIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.ShuffleOnIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.ShuffleOffIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.LoopOnIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.LoopOffIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StartOverIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.RepeatIntent",
+          "samples": []
+        }
+      ],
+      "types": [
+        {
+          "name": "ARTIST_NAME",
+          "values": [
+            {
+              "name": {
+                "value": "Queen"
+              }
+            },
+            {
+              "name": {
+                "value": "The Beatles"
+              }
+            },
+            {
+              "name": {
+                "value": "Taylor Swift"
+              }
+            },
+            {
+              "name": {
+                "value": "Coldplay"
+              }
+            },
+            {
+              "name": {
+                "value": "AC DC"
+              }
+            },
+            {
+              "name": {
+                "value": "Pink Floyd"
+              }
+            },
+            {
+              "name": {
+                "value": "Adele"
+              }
+            },
+            {
+              "name": {
+                "value": "Drake"
+              }
+            },
+            {
+              "name": {
+                "value": "Radiohead"
+              }
+            },
+            {
+              "name": {
+                "value": "Daft Punk"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ALBUM_NAME",
+          "values": [
+            {
+              "name": {
+                "value": "Thriller"
+              }
+            },
+            {
+              "name": {
+                "value": "Abbey Road"
+              }
+            },
+            {
+              "name": {
+                "value": "Back in Black"
+              }
+            },
+            {
+              "name": {
+                "value": "Dark Side of the Moon"
+              }
+            },
+            {
+              "name": {
+                "value": "Rumours"
+              }
+            },
+            {
+              "name": {
+                "value": "Nevermind"
+              }
+            }
+          ]
+        },
+        {
+          "name": "SONG_NAME",
+          "values": [
+            {
+              "name": {
+                "value": "Bohemian Rhapsody"
+              }
+            },
+            {
+              "name": {
+                "value": "Imagine"
+              }
+            },
+            {
+              "name": {
+                "value": "Hey Jude"
+              }
+            },
+            {
+              "name": {
+                "value": "Billie Jean"
+              }
+            },
+            {
+              "name": {
+                "value": "Smells Like Teen Spirit"
+              }
+            },
+            {
+              "name": {
+                "value": "Hotel California"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GENRE_NAME",
+          "values": [
+            {
+              "name": {
+                "value": "rock"
+              }
+            },
+            {
+              "name": {
+                "value": "pop"
+              }
+            },
+            {
+              "name": {
+                "value": "jazz"
+              }
+            },
+            {
+              "name": {
+                "value": "classical"
+              }
+            },
+            {
+              "name": {
+                "value": "country"
+              }
+            },
+            {
+              "name": {
+                "value": "electronic"
+              }
+            },
+            {
+              "name": {
+                "value": "blues"
+              }
+            },
+            {
+              "name": {
+                "value": "metal"
+              }
+            },
+            {
+              "name": {
+                "value": "indie"
+              }
+            },
+            {
+              "name": {
+                "value": "hip hop"
+              }
+            },
+            {
+              "name": {
+                "value": "soul"
+              }
+            },
+            {
+              "name": {
+                "value": "reggae"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PLAYLIST_NAME",
+          "values": [
+            {
+              "name": {
+                "value": "favorites"
+              }
+            },
+            {
+              "name": {
+                "value": "road trip"
+              }
+            },
+            {
+              "name": {
+                "value": "party"
+              }
+            },
+            {
+              "name": {
+                "value": "chill"
+              }
+            },
+            {
+              "name": {
+                "value": "workout"
+              }
+            },
+            {
+              "name": {
+                "value": "dinner"
+              }
+            }
+          ]
+        },
+        {
+          "name": "FOLDER_NAME",
+          "values": [
+            {
+              "name": {
+                "value": "downloads"
+              }
+            },
+            {
+              "name": {
+                "value": "vinyl rips"
+              }
+            },
+            {
+              "name": {
+                "value": "soundtracks"
+              }
+            },
+            {
+              "name": {
+                "value": "live"
+              }
+            }
+          ]
+        },
+        {
+          "name": "DECADE",
+          "values": [
+            {
+              "id": "1950",
+              "name": {
+                "value": "fifties",
+                "synonyms": [
+                  "nineteen fifties"
+                ]
+              }
+            },
+            {
+              "id": "1960",
+              "name": {
+                "value": "sixties",
+                "synonyms": []
+              }
+            },
+            {
+              "id": "1970",
+              "name": {
+                "value": "seventies",
+                "synonyms": []
+              }
+            },
+            {
+              "id": "1980",
+              "name": {
+                "value": "eighties",
+                "synonyms": []
+              }
+            },
+            {
+              "id": "1990",
+              "name": {
+                "value": "nineties",
+                "synonyms": []
+              }
+            },
+            {
+              "id": "2000",
+              "name": {
+                "value": "two thousands",
+                "synonyms": [
+                  "noughties"
+                ]
+              }
+            },
+            {
+              "id": "2010",
+              "name": {
+                "value": "twenty tens",
+                "synonyms": []
+              }
+            },
+            {
+              "id": "2020",
+              "name": {
+                "value": "twenty twenties",
+                "synonyms": []
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

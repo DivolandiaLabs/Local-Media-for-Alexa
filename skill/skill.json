@@ -1,0 +1,183 @@
+{
+  "manifest": {
+    "manifestVersion": "1.0",
+    "publishingInformation": {
+      "locales": {
+        "es-ES": {
+          "name": "Mi Colección",
+          "summary": "Tu música de la Raspberry Pi en Alexa",
+          "description": "Reproduce la música de tu Raspberry Pi o NAS en tus dispositivos Echo.",
+          "examplePhrases": [
+            "Alexa, abre mi colección",
+            "Alexa, pide a mi colección que ponga Queen",
+            "Alexa, pide a mi colección que ponga el álbum Thriller"
+          ],
+          "keywords": [
+            "música",
+            "music",
+            "media"
+          ]
+        },
+        "es-MX": {
+          "name": "Mi Colección",
+          "summary": "Tu música de la Raspberry Pi en Alexa",
+          "description": "Reproduce la música de tu Raspberry Pi o NAS en tus dispositivos Echo.",
+          "examplePhrases": [
+            "Alexa, abre mi colección",
+            "Alexa, pide a mi colección que ponga Queen",
+            "Alexa, pide a mi colección que ponga el álbum Thriller"
+          ],
+          "keywords": [
+            "música",
+            "music",
+            "media"
+          ]
+        },
+        "es-US": {
+          "name": "Mi Colección",
+          "summary": "Tu música de la Raspberry Pi en Alexa",
+          "description": "Reproduce la música de tu Raspberry Pi o NAS en tus dispositivos Echo.",
+          "examplePhrases": [
+            "Alexa, abre mi colección",
+            "Alexa, pide a mi colección que ponga Queen",
+            "Alexa, pide a mi colección que ponga el álbum Thriller"
+          ],
+          "keywords": [
+            "música",
+            "music",
+            "media"
+          ]
+        },
+        "en-US": {
+          "name": "My Collection",
+          "summary": "Your Raspberry Pi music on Alexa",
+          "description": "Play the music stored on your Raspberry Pi or NAS on your Echo devices.",
+          "examplePhrases": [
+            "Alexa, open my collection",
+            "Alexa, ask my collection to play Queen",
+            "Alexa, ask my collection to play the album Thriller"
+          ],
+          "keywords": [
+            "música",
+            "music",
+            "media"
+          ]
+        },
+        "en-GB": {
+          "name": "My Collection",
+          "summary": "Your Raspberry Pi music on Alexa",
+          "description": "Play the music stored on your Raspberry Pi or NAS on your Echo devices.",
+          "examplePhrases": [
+            "Alexa, open my collection",
+            "Alexa, ask my collection to play Queen",
+            "Alexa, ask my collection to play the album Thriller"
+          ],
+          "keywords": [
+            "música",
+            "music",
+            "media"
+          ]
+        },
+        "en-CA": {
+          "name": "My Collection",
+          "summary": "Your Raspberry Pi music on Alexa",
+          "description": "Play the music stored on your Raspberry Pi or NAS on your Echo devices.",
+          "examplePhrases": [
+            "Alexa, open my collection",
+            "Alexa, ask my collection to play Queen",
+            "Alexa, ask my collection to play the album Thriller"
+          ],
+          "keywords": [
+            "música",
+            "music",
+            "media"
+          ]
+        },
+        "en-AU": {
+          "name": "My Collection",
+          "summary": "Your Raspberry Pi music on Alexa",
+          "description": "Play the music stored on your Raspberry Pi or NAS on your Echo devices.",
+          "examplePhrases": [
+            "Alexa, open my collection",
+            "Alexa, ask my collection to play Queen",
+            "Alexa, ask my collection to play the album Thriller"
+          ],
+          "keywords": [
+            "música",
+            "music",
+            "media"
+          ]
+        },
+        "en-IN": {
+          "name": "My Collection",
+          "summary": "Your Raspberry Pi music on Alexa",
+          "description": "Play the music stored on your Raspberry Pi or NAS on your Echo devices.",
+          "examplePhrases": [
+            "Alexa, open my collection",
+            "Alexa, ask my collection to play Queen",
+            "Alexa, ask my collection to play the album Thriller"
+          ],
+          "keywords": [
+            "música",
+            "music",
+            "media"
+          ]
+        }
+      },
+      "isAvailableWorldwide": false,
+      "distributionCountries": [],
+      "category": "STREAMING_SERVICE",
+      "testingInstructions": "Skill privada."
+    },
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "usesPersonalInfo": false,
+      "isChildDirected": false,
+      "isExportCompliant": true,
+      "containsAds": false,
+      "locales": {
+        "es-ES": {},
+        "es-MX": {},
+        "es-US": {},
+        "en-US": {},
+        "en-GB": {},
+        "en-CA": {},
+        "en-AU": {},
+        "en-IN": {}
+      }
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "https://TU-DOMINIO/alexa",
+          "sslCertificateType": "Trusted"
+        },
+        "interfaces": [
+          {
+            "type": "AUDIO_PLAYER"
+          }
+        ],
+        "regions": {
+          "EU": {
+            "endpoint": {
+              "uri": "https://TU-DOMINIO/alexa",
+              "sslCertificateType": "Trusted"
+            }
+          },
+          "NA": {
+            "endpoint": {
+              "uri": "https://TU-DOMINIO/alexa",
+              "sslCertificateType": "Trusted"
+            }
+          },
+          "FE": {
+            "endpoint": {
+              "uri": "https://TU-DOMINIO/alexa",
+              "sslCertificateType": "Trusted"
+            }
+          }
+        }
+      }
+    }
+  }
+}

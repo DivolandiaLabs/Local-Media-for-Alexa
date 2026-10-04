@@ -1,0 +1,6 @@
+flask>=2.3
+waitress>=2.1
+mutagen>=1.46
+cryptography>=42
+certifi
+pillow

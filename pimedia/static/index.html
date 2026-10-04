@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PiMedia</title>
+<link rel="icon" href="/static/cover.svg">
+<link rel="stylesheet" href="/static/style.css">
+<meta name="theme-color" content="#14161c">
+</head>
+<body>
+<div id="login" class="login hidden">
+  <form id="loginForm" class="login-box">
+    <img src="/static/cover.svg" alt="" width="64" height="64">
+    <h1>PiMedia</h1>
+    <input type="password" id="loginPw" placeholder="Contraseña" autocomplete="current-password">
+    <button class="btn primary" type="submit">Entrar</button>
+    <p id="loginErr" class="err"></p>
+  </form>
+</div>
+
+<div id="app" class="layout">
+  <aside id="side" class="side">
+    <div class="brand"><img src="/static/cover.svg" alt="" width="28" height="28"> PiMedia</div>
+    <form id="searchForm" class="search"><input id="searchBox" type="search" placeholder="Buscar en tu música…"></form>
+    <nav>
+      <a href="#/" data-nav="home">🏠 Inicio</a>
+      <a href="#/artists" data-nav="artists">🎤 Artistas</a>
+      <a href="#/albums" data-nav="albums">💿 Álbumes</a>
+      <a href="#/tracks" data-nav="tracks">🎵 Canciones</a>
+      <a href="#/genres" data-nav="genres">🎸 Géneros</a>
+      <a href="#/folders" data-nav="folders">📁 Carpetas</a>
+      <a href="#/playlists" data-nav="playlists">📜 Listas</a>
+      <a href="#/favorites" data-nav="favorites">⭐ Favoritas</a>
+      <div class="sep"></div>
+      <a href="#/alexa" data-nav="alexa">🔊 Alexa</a>
+      <a href="#/setup" data-nav="setup">🧭 Configurar Alexa</a>
+      <a href="#/settings" data-nav="settings">⚙️ Ajustes</a>
+    </nav>
+    <div id="scanBadge" class="scan-badge hidden"></div>
+  </aside>
+  <header class="topbar">
+    <button id="menuBtn" class="icon-btn" aria-label="Menú">☰</button>
+    <span class="brand small"><img src="/static/cover.svg" alt="" width="22" height="22"> PiMedia</span>
+  </header>
+  <main id="main" class="main"></main>
+
+  <footer class="player">
+    <div class="np">
+      <img id="npArt" src="/static/cover.svg" alt="">
+      <div class="np-text"><div id="npTitle" class="np-title">Nada sonando</div><div id="npSub" class="np-sub"></div></div>
+    </div>
+    <div class="controls">
+      <div class="buttons">
+        <button id="pShuffle" class="icon-btn" title="Aleatorio">🔀</button>
+        <button id="pPrev" class="icon-btn" title="Anterior">⏮</button>
+        <button id="pPlay" class="icon-btn big" title="Reproducir">▶</button>
+        <button id="pNext" class="icon-btn" title="Siguiente">⏭</button>
+        <button id="pLoop" class="icon-btn" title="Repetir">🔁</button>
+      </div>
+      <div class="seek"><span id="pCur">0:00</span><input id="pSeek" type="range" min="0" max="1000" value="0"><span id="pDur">0:00</span></div>
+    </div>
+    <div class="extra">
+      <button id="pQueue" class="icon-btn" title="Cola">☰</button>
+      <button id="pAlexa" class="icon-btn" title="Enviar la cola a Alexa">🔊</button>
+      <input id="pVol" type="range" min="0" max="100" value="90" title="Volumen">
+    </div>
+    <audio id="audio" preload="auto"></audio>
+  </footer>
+</div>
+
+<div id="modal" class="modal hidden"><div class="modal-box"><button class="icon-btn modal-x" id="modalX">✕</button><div id="modalBody"></div></div></div>
+<div id="toast" class="toast hidden"></div>
+<script src="/static/app.js"></script>
+</body>
+</html>

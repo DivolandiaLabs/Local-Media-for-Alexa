@@ -1,0 +1,716 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "mi colección",
+      "intents": [
+        {
+          "name": "PlayArtistIntent",
+          "samples": [
+            "pon música de {artist}",
+            "pon canciones de {artist}",
+            "reproduce música de {artist}",
+            "pon al artista {artist}",
+            "pon al grupo {artist}",
+            "pon algo de {artist}",
+            "quiero escuchar a {artist}",
+            "pon a {artist}",
+            "reproduce a {artist}",
+            "pon temas de {artist}",
+            "ponga música de {artist}",
+            "ponga canciones de {artist}",
+            "reproduzca música de {artist}",
+            "ponga al artista {artist}",
+            "ponga al grupo {artist}",
+            "ponga algo de {artist}",
+            "ponga a {artist}",
+            "reproduzca a {artist}",
+            "ponga temas de {artist}"
+          ],
+          "slots": [
+            {
+              "name": "artist",
+              "type": "ARTIST_NAME"
+            }
+          ]
+        },
+        {
+          "name": "PlayAlbumIntent",
+          "samples": [
+            "pon el álbum {album}",
+            "pon el disco {album}",
+            "reproduce el álbum {album}",
+            "reproduce el disco {album}",
+            "pon el álbum {album} de {artist}",
+            "pon el disco {album} de {artist}",
+            "quiero escuchar el disco {album}",
+            "quiero escuchar el álbum {album}",
+            "ponga el álbum {album}",
+            "ponga el disco {album}",
+            "reproduzca el álbum {album}",
+            "reproduzca el disco {album}",
+            "ponga el álbum {album} de {artist}",
+            "ponga el disco {album} de {artist}"
+          ],
+          "slots": [
+            {
+              "name": "album",
+              "type": "ALBUM_NAME"
+            },
+            {
+              "name": "artist",
+              "type": "ARTIST_NAME"
+            }
+          ]
+        },
+        {
+          "name": "PlaySongIntent",
+          "samples": [
+            "pon la canción {song}",
+            "reproduce la canción {song}",
+            "pon la canción {song} de {artist}",
+            "pon el tema {song}",
+            "pon el tema {song} de {artist}",
+            "quiero escuchar la canción {song}",
+            "reproduce el tema {song}",
+            "ponga la canción {song}",
+            "reproduzca la canción {song}",
+            "ponga la canción {song} de {artist}",
+            "ponga el tema {song}",
+            "ponga el tema {song} de {artist}",
+            "reproduzca el tema {song}"
+          ],
+          "slots": [
+            {
+              "name": "song",
+              "type": "SONG_NAME"
+            },
+            {
+              "name": "artist",
+              "type": "ARTIST_NAME"
+            }
+          ]
+        },
+        {
+          "name": "PlayGenreIntent",
+          "samples": [
+            "pon música {genre}",
+            "pon el género {genre}",
+            "reproduce música {genre}",
+            "pon música del género {genre}",
+            "quiero escuchar música {genre}",
+            "ponga música {genre}",
+            "ponga el género {genre}",
+            "reproduzca música {genre}",
+            "ponga música del género {genre}"
+          ],
+          "slots": [
+            {
+              "name": "genre",
+              "type": "GENRE_NAME"
+            }
+          ]
+        },
+        {
+          "name": "PlayPlaylistIntent",
+          "samples": [
+            "pon la lista {playlist}",
+            "pon la lista de reproducción {playlist}",
+            "pon mi lista {playlist}",
+            "reproduce la lista {playlist}",
+            "pon la playlist {playlist}",
+            "reproduce la playlist {playlist}",
+            "ponga la lista {playlist}",
+            "ponga la lista de reproducción {playlist}",
+            "ponga mi lista {playlist}",
+            "reproduzca la lista {playlist}",
+            "ponga la playlist {playlist}",
+            "reproduzca la playlist {playlist}"
+          ],
+          "slots": [
+            {
+              "name": "playlist",
+              "type": "PLAYLIST_NAME"
+            }
+          ]
+        },
+        {
+          "name": "PlayFolderIntent",
+          "samples": [
+            "pon la carpeta {folder}",
+            "reproduce la carpeta {folder}",
+            "pon lo que hay en la carpeta {folder}",
+            "ponga la carpeta {folder}",
+            "reproduzca la carpeta {folder}",
+            "ponga lo que hay en la carpeta {folder}"
+          ],
+          "slots": [
+            {
+              "name": "folder",
+              "type": "FOLDER_NAME"
+            }
+          ]
+        },
+        {
+          "name": "PlayYearIntent",
+          "samples": [
+            "pon música del {year}",
+            "pon música del año {year}",
+            "pon canciones del {year}",
+            "pon canciones del año {year}",
+            "reproduce música del año {year}",
+            "ponga música del {year}",
+            "ponga música del año {year}",
+            "ponga canciones del {year}",
+            "ponga canciones del año {year}",
+            "reproduzca música del año {year}"
+          ],
+          "slots": [
+            {
+              "name": "year",
+              "type": "AMAZON.FOUR_DIGIT_NUMBER"
+            }
+          ]
+        },
+        {
+          "name": "PlayDecadeIntent",
+          "samples": [
+            "pon música de los {decade}",
+            "pon canciones de los {decade}",
+            "pon éxitos de los {decade}",
+            "reproduce música de los {decade}",
+            "pon algo de los {decade}",
+            "ponga música de los {decade}",
+            "ponga canciones de los {decade}",
+            "ponga éxitos de los {decade}",
+            "reproduzca música de los {decade}",
+            "ponga algo de los {decade}"
+          ],
+          "slots": [
+            {
+              "name": "decade",
+              "type": "DECADE"
+            }
+          ]
+        },
+        {
+          "name": "ShuffleAllIntent",
+          "samples": [
+            "pon toda mi música",
+            "pon música aleatoria",
+            "pon algo",
+            "pon música",
+            "mezcla toda mi música",
+            "sorpréndeme",
+            "reproduce toda la biblioteca",
+            "pon todo",
+            "pon mi música en aleatorio",
+            "pon toda la música",
+            "ponga toda mi música",
+            "ponga música aleatoria",
+            "ponga algo",
+            "ponga música",
+            "mezcle toda mi música",
+            "me sorprenda",
+            "reproduzca toda la biblioteca",
+            "ponga todo",
+            "ponga mi música en aleatorio",
+            "ponga toda la música"
+          ]
+        },
+        {
+          "name": "PlayRecentIntent",
+          "samples": [
+            "pon lo último que he añadido",
+            "pon lo más nuevo",
+            "pon las novedades",
+            "pon la música reciente",
+            "pon lo último añadido",
+            "pon los últimos discos",
+            "ponga lo último que he añadido",
+            "ponga lo más nuevo",
+            "ponga las novedades",
+            "ponga la música reciente",
+            "ponga lo último añadido",
+            "ponga los últimos discos"
+          ]
+        },
+        {
+          "name": "PlayFavoritesIntent",
+          "samples": [
+            "pon mis favoritas",
+            "pon mis favoritos",
+            "pon mis canciones favoritas",
+            "pon mi música favorita",
+            "ponga mis favoritas",
+            "ponga mis favoritos",
+            "ponga mis canciones favoritas",
+            "ponga mi música favorita"
+          ]
+        },
+        {
+          "name": "PlayMostPlayedIntent",
+          "samples": [
+            "pon lo más escuchado",
+            "pon mis canciones más escuchadas",
+            "pon lo que más escucho",
+            "pon lo más reproducido",
+            "ponga lo más escuchado",
+            "ponga mis canciones más escuchadas",
+            "ponga lo que más escucho",
+            "ponga lo más reproducido"
+          ]
+        },
+        {
+          "name": "PlayMoreByArtistIntent",
+          "samples": [
+            "pon más de este artista",
+            "más de este artista",
+            "pon más de este grupo",
+            "más canciones de este artista",
+            "pon más canciones de este grupo",
+            "ponga más de este artista",
+            "ponga más de este grupo",
+            "ponga más canciones de este grupo"
+          ]
+        },
+        {
+          "name": "PlayCurrentAlbumIntent",
+          "samples": [
+            "pon este álbum",
+            "pon el álbum entero",
+            "pon el disco completo",
+            "pon este disco",
+            "pon el álbum completo",
+            "ponga este álbum",
+            "ponga el álbum entero",
+            "ponga el disco completo",
+            "ponga este disco",
+            "ponga el álbum completo"
+          ]
+        },
+        {
+          "name": "WhatIsPlayingIntent",
+          "samples": [
+            "qué está sonando",
+            "qué suena",
+            "qué canción es esta",
+            "cómo se llama esta canción",
+            "quién canta esto",
+            "qué es esto",
+            "qué canción suena",
+            "de quién es esta canción"
+          ]
+        },
+        {
+          "name": "PlayAnythingIntent",
+          "samples": [
+            "pon {query}",
+            "reproduce {query}",
+            "quiero escuchar {query}",
+            "busca {query}",
+            "toca {query}",
+            "ponga {query}",
+            "reproduzca {query}",
+            "busque {query}",
+            "toque {query}"
+          ],
+          "slots": [
+            {
+              "name": "query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ]
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.PauseIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.ResumeIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NextIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.PreviousIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.ShuffleOnIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.ShuffleOffIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.LoopOnIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.LoopOffIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StartOverIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.RepeatIntent",
+          "samples": []
+        }
+      ],
+      "types": [
+        {
+          "name": "ARTIST_NAME",
+          "values": [
+            {
+              "name": {
+                "value": "Estopa"
+              }
+            },
+            {
+              "name": {
+                "value": "Queen"
+              }
+            },
+            {
+              "name": {
+                "value": "Rosalía"
+              }
+            },
+            {
+              "name": {
+                "value": "Los Beatles"
+              }
+            },
+            {
+              "name": {
+                "value": "Alejandro Sanz"
+              }
+            },
+            {
+              "name": {
+                "value": "Coldplay"
+              }
+            },
+            {
+              "name": {
+                "value": "Mecano"
+              }
+            },
+            {
+              "name": {
+                "value": "Bad Bunny"
+              }
+            },
+            {
+              "name": {
+                "value": "AC DC"
+              }
+            },
+            {
+              "name": {
+                "value": "Héroes del Silencio"
+              }
+            }
+          ]
+        },
+        {
+          "name": "ALBUM_NAME",
+          "values": [
+            {
+              "name": {
+                "value": "Thriller"
+              }
+            },
+            {
+              "name": {
+                "value": "Abbey Road"
+              }
+            },
+            {
+              "name": {
+                "value": "El Mal Querer"
+              }
+            },
+            {
+              "name": {
+                "value": "Descanso dominical"
+              }
+            },
+            {
+              "name": {
+                "value": "Back in Black"
+              }
+            },
+            {
+              "name": {
+                "value": "Dark Side of the Moon"
+              }
+            }
+          ]
+        },
+        {
+          "name": "SONG_NAME",
+          "values": [
+            {
+              "name": {
+                "value": "Bohemian Rhapsody"
+              }
+            },
+            {
+              "name": {
+                "value": "La Flaca"
+              }
+            },
+            {
+              "name": {
+                "value": "Despacito"
+              }
+            },
+            {
+              "name": {
+                "value": "Hijo de la Luna"
+              }
+            },
+            {
+              "name": {
+                "value": "Entre dos tierras"
+              }
+            },
+            {
+              "name": {
+                "value": "Imagine"
+              }
+            }
+          ]
+        },
+        {
+          "name": "GENRE_NAME",
+          "values": [
+            {
+              "name": {
+                "value": "rock"
+              }
+            },
+            {
+              "name": {
+                "value": "pop"
+              }
+            },
+            {
+              "name": {
+                "value": "jazz"
+              }
+            },
+            {
+              "name": {
+                "value": "flamenco"
+              }
+            },
+            {
+              "name": {
+                "value": "clásica"
+              }
+            },
+            {
+              "name": {
+                "value": "reggaeton"
+              }
+            },
+            {
+              "name": {
+                "value": "electrónica"
+              }
+            },
+            {
+              "name": {
+                "value": "blues"
+              }
+            },
+            {
+              "name": {
+                "value": "metal"
+              }
+            },
+            {
+              "name": {
+                "value": "indie"
+              }
+            },
+            {
+              "name": {
+                "value": "salsa"
+              }
+            },
+            {
+              "name": {
+                "value": "hip hop"
+              }
+            }
+          ]
+        },
+        {
+          "name": "PLAYLIST_NAME",
+          "values": [
+            {
+              "name": {
+                "value": "favoritas"
+              }
+            },
+            {
+              "name": {
+                "value": "viaje"
+              }
+            },
+            {
+              "name": {
+                "value": "fiesta"
+              }
+            },
+            {
+              "name": {
+                "value": "relax"
+              }
+            },
+            {
+              "name": {
+                "value": "gimnasio"
+              }
+            },
+            {
+              "name": {
+                "value": "cena"
+              }
+            }
+          ]
+        },
+        {
+          "name": "FOLDER_NAME",
+          "values": [
+            {
+              "name": {
+                "value": "descargas"
+              }
+            },
+            {
+              "name": {
+                "value": "vinilos"
+              }
+            },
+            {
+              "name": {
+                "value": "bandas sonoras"
+              }
+            },
+            {
+              "name": {
+                "value": "conciertos"
+              }
+            }
+          ]
+        },
+        {
+          "name": "DECADE",
+          "values": [
+            {
+              "id": "1950",
+              "name": {
+                "value": "cincuenta",
+                "synonyms": [
+                  "años cincuenta"
+                ]
+              }
+            },
+            {
+              "id": "1960",
+              "name": {
+                "value": "sesenta",
+                "synonyms": [
+                  "años sesenta"
+                ]
+              }
+            },
+            {
+              "id": "1970",
+              "name": {
+                "value": "setenta",
+                "synonyms": [
+                  "años setenta"
+                ]
+              }
+            },
+            {
+              "id": "1980",
+              "name": {
+                "value": "ochenta",
+                "synonyms": [
+                  "años ochenta"
+                ]
+              }
+            },
+            {
+              "id": "1990",
+              "name": {
+                "value": "noventa",
+                "synonyms": [
+                  "años noventa"
+                ]
+              }
+            },
+            {
+              "id": "2000",
+              "name": {
+                "value": "dos mil",
+                "synonyms": [
+                  "años dos mil"
+                ]
+              }
+            },
+            {
+              "id": "2010",
+              "name": {
+                "value": "dos mil diez",
+                "synonyms": [
+                  "años diez"
+                ]
+              }
+            },
+            {
+              "id": "2020",
+              "name": {
+                "value": "dos mil veinte",
+                "synonyms": [
+                  "años veinte"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
