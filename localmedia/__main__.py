@@ -1,4 +1,4 @@
-"""Arranque: python -m pimedia [--data DIR]"""
+"""Arranque: python -m localmedia [--data DIR]"""
 import argparse
 import logging
 import os
@@ -12,7 +12,7 @@ from .db import DB
 from .library import Library
 from .web import make_lan_app, make_public_app
 
-log = logging.getLogger("pimedia")
+log = logging.getLogger("localmedia")
 
 
 def serve(app, host, port, name):
@@ -20,7 +20,7 @@ def serve(app, host, port, name):
         from waitress import serve as wserve
         log.info("%s escuchando en http://%s:%s", name, host, port)
         wserve(app, host=host, port=port, threads=12, channel_timeout=600,
-               ident="PiMedia", clear_untrusted_proxy_headers=True)
+               ident="Local Media", clear_untrusted_proxy_headers=True)
     except ImportError:
         log.warning("waitress no instalado; usando el servidor de desarrollo de Flask")
         app.run(host=host, port=port, threaded=True, use_reloader=False)
@@ -38,9 +38,9 @@ def rescan_loop(cfg, lib):
 
 
 def main():
-    ap = argparse.ArgumentParser(description="PiMedia - musica local para Alexa")
-    ap.add_argument("--data", default=os.environ.get("PIMEDIA_DATA",
-                                                     os.path.expanduser("~/.pimedia")),
+    ap = argparse.ArgumentParser(description="Local Media - musica local para Alexa")
+    ap.add_argument("--data", default=os.environ.get("LOCALMEDIA_DATA",
+                                                     os.path.expanduser("~/.localmedia")),
                     help="directorio de datos (config, base de datos, caratulas)")
     ap.add_argument("--music", action="append", help="añadir carpeta de musica")
     ap.add_argument("--public-url", help="URL https publica (para Alexa)")
@@ -52,6 +52,13 @@ def main():
     logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO,
                         format="%(asctime)s %(levelname)s %(name)s: %(message)s")
     logging.getLogger("waitress.queue").setLevel(logging.ERROR)
+
+    # datos de cuando el programa se llamaba PiMedia
+    old = os.path.expanduser("~/.pimedia")
+    if args.data == os.path.expanduser("~/.localmedia") and not os.path.exists(args.data) \
+            and os.path.isdir(old):
+        os.rename(old, args.data)
+        log.info("Datos de PiMedia trasladados a %s", args.data)
 
     cfg = Config(args.data)
     changes = {}
@@ -67,7 +74,7 @@ def main():
     db = DB(os.path.join(args.data, "library.db"))
     lib = Library(cfg, db)
     skill = AlexaSkill(cfg, lib, db)
-    log.info("PiMedia %s - datos en %s", __version__, args.data)
+    log.info("Local Media %s - datos en %s", __version__, args.data)
 
     if cfg["music_folders"] or cfg["upnp_enabled"]:
         lib.start_scan(False)

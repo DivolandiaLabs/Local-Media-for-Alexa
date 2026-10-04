@@ -1,4 +1,4 @@
-"""Configuracion persistente de PiMedia (JSON en el directorio de datos)."""
+"""Configuracion persistente de Local Media (JSON en el directorio de datos)."""
 import json
 import os
 import secrets

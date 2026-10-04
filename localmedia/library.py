@@ -10,7 +10,7 @@ import urllib.parse
 
 from .textnorm import norm, best
 
-log = logging.getLogger("pimedia.library")
+log = logging.getLogger("localmedia.library")
 
 try:
     import mutagen

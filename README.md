@@ -1,4 +1,4 @@
-# PiMedia — tu música de la Raspberry Pi en Alexa
+# Local Media — tu música de la Raspberry Pi en Alexa
 
 Alternativa libre y autoalojada a *My Media for Alexa* para **Raspberry Pi / Linux ARM**
 (funciona también en cualquier Linux x86 o con Docker).
@@ -19,8 +19,8 @@ Requisitos: Raspberry Pi 3/4/5 o Zero 2 W con Raspberry Pi OS (Bookworm o poster
 
 ```bash
 sudo apt update && sudo apt install -y git
-git clone https://github.com/DivolandiaLabs/pimedia-alexa.git
-cd pimedia-alexa
+git clone https://github.com/DivolandiaLabs/Local-Media-for-Alexa.git
+cd Local-Media-for-Alexa
 chmod +x install.sh
 ./install.sh
 ```
@@ -40,14 +40,14 @@ Abre `http://IP-DE-LA-PI:8080` desde el móvil o el PC:
 Actualizar a la última versión:
 
 ```bash
-cd ~/pimedia-alexa && git pull && ./install.sh
+cd ~/Local-Media-for-Alexa && git pull && ./install.sh
 ```
 
 Con Docker: mira las instrucciones al principio del [Dockerfile](Dockerfile).
 
 ## Funciones
 
-| My Media for Alexa | PiMedia |
+| My Media for Alexa | Local Media |
 |---|---|
 | Reproducir por artista, álbum, canción, género, lista | ✅ con búsqueda aproximada (tolera lo que Alexa oye mal) |
 | Reproducir por carpeta | ✅ |
@@ -94,7 +94,7 @@ para que Alexa los reconozca mejor. En [skill/](skill) hay también un modelo ge
 el manifiesto `skill.json` (para `ask-cli`).
 
 Nombre de invocación: **"mi colección"** (en inglés *"my collection"*). Se puede cambiar
-en la consola de Alexa (*Invocation*); PiMedia no depende de él.
+en la consola de Alexa (*Invocation*); Local Media no depende de él.
 
 Las skills de Alexa no pueden empezar a sonar por iniciativa propia: cuando mandas una cola
 desde la web, di *"Alexa, abre mi colección"* para que empiece.
@@ -103,7 +103,7 @@ desde la web, di *"Alexa, abre mi colección"* para que empiece.
 
 | Síntoma | Solución |
 |---|---|
-| "Hubo un problema con la respuesta de la skill solicitada" | Revisa `journalctl -u pimedia -f`. Si pone *peticion demasiado antigua*, la hora de la Pi está mal (`timedatectl`). |
+| "Hubo un problema con la respuesta de la skill solicitada" | Revisa `journalctl -u localmedia -f`. Si pone *peticion demasiado antigua*, la hora de la Pi está mal (`timedatectl`). |
 | Alexa dice la frase pero no suena | La URL pública no es accesible por HTTPS o no tiene certificado válido. Usa el botón *Guardar y probar* de la guía. |
 | No suenan los FLAC | Falta ffmpeg: `sudo apt install ffmpeg`. |
 | Alexa no entiende un nombre raro | Descarga de nuevo el modelo de voz (lleva tu biblioteca) y súbelo en la consola. |
@@ -112,15 +112,15 @@ desde la web, di *"Alexa, abre mi colección"* para que empiece.
 Comandos útiles:
 
 ```bash
-journalctl -u pimedia -f          # ver lo que pasa
-sudo systemctl restart pimedia    # reiniciar
+journalctl -u localmedia -f          # ver lo que pasa
+sudo systemctl restart localmedia    # reiniciar
 ./uninstall.sh                    # quitar el servicio (no borra tu música)
 ```
 
 ## Archivos
 
 ```
-pimedia/             programa (Python 3.9+)
+localmedia/             programa (Python 3.9+)
   alexa.py           intents, colas por dispositivo, eventos del AudioPlayer
   alexa_verify.py    comprobación de firma y certificado de Amazon
   library.py         escaneo, etiquetas (mutagen), carátulas, listas, búsqueda
@@ -133,4 +133,4 @@ skill/               modelo de voz genérico y manifiesto de la skill
 install.sh           instalador para Raspberry Pi OS / Debian
 ```
 
-Datos (configuración, base de datos, caché de carátulas): `~/.pimedia/`.
+Datos (configuración, base de datos, caché de carátulas): `~/.localmedia/`.

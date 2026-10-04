@@ -9,7 +9,7 @@ import time
 from .i18n import T
 from .media import needs_transcode
 
-log = logging.getLogger("pimedia.alexa")
+log = logging.getLogger("localmedia.alexa")
 
 DEFAULT_STATE = {"queue": [], "order": [], "pos": 0, "offset": 0, "shuffle": False,
                  "loop": False, "qid": "", "desc": "", "pending": False, "playing": False,

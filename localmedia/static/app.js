@@ -46,7 +46,7 @@ function playIdx(i) {
   const t = P.queue[i]; if (!t) return;
   P.idx = i; audio.src = `/api/stream/${t.id}`; audio.play().catch(() => { });
   $("#npTitle").textContent = t.title; $("#npSub").textContent = [t.artist, t.album].filter(Boolean).join(" — ");
-  $("#npArt").src = art(t.id); document.title = `${t.title} · PiMedia`;
+  $("#npArt").src = art(t.id); document.title = `${t.title} · Local Media`;
   if ("mediaSession" in navigator) navigator.mediaSession.metadata = new MediaMetadata({ title: t.title, artist: t.artist, album: t.album, artwork: [{ src: art(t.id) }] });
   document.querySelectorAll("tr[data-tid]").forEach((tr) => tr.classList.toggle("playing", +tr.dataset.tid === t.id));
 }
@@ -309,7 +309,7 @@ const views = {
     ${devs.map((d) => `<div class="panel"><div class="row"><div style="font-size:30px">🔊</div><div class="grow" style="flex:1"><b>${esc(d.name || "Echo …" + d.id.slice(-6))}</b> ${d.playing ? '<span class="pill ok">sonando</span>' : ""} ${d.pending ? '<span class="pill">cola preparada</span>' : ""}<div class="muted" style="font-size:13px">Visto ${ago(d.last_seen)} · ${d.queue_len} en cola ${d.shuffle ? "· 🔀" : ""} ${d.loop ? "· 🔁" : ""}</div></div>
       <button class="btn small" data-ren="${esc(d.id)}">✏️ Nombre</button><button class="btn small" data-q="${esc(d.id)}">☰ Cola</button><button class="btn small danger" data-del="${esc(d.id)}">✕</button></div>
       ${d.current ? `<div class="item" style="margin-top:10px"><img src="${art(d.current.id)}" alt=""><div class="grow"><div class="t">${esc(d.current.title)}</div><div class="s">${esc(d.current.artist)} — ${esc(d.current.album)}</div></div></div>` : ""}</div>`).join("") || `<div class="panel">Todavía ningún Echo ha usado la skill. Di <b>“Alexa, abre mi colección”</b>.</div>`}
-    <h2>Últimas peticiones de Alexa</h2><div class="panel">${s.recent_requests.length ? s.recent_requests.map((r) => `<div class="muted" style="font-size:13px">${new Date(r.t * 1000).toLocaleTimeString()} · ${esc(r.type)} ${esc(r.intent || "")} · …${esc(r.device)}</div>`).join("") : '<span class="muted">Ninguna desde que arrancó PiMedia.</span>'}</div>
+    <h2>Últimas peticiones de Alexa</h2><div class="panel">${s.recent_requests.length ? s.recent_requests.map((r) => `<div class="muted" style="font-size:13px">${new Date(r.t * 1000).toLocaleTimeString()} · ${esc(r.type)} ${esc(r.intent || "")} · …${esc(r.device)}</div>`).join("") : '<span class="muted">Ninguna desde que arrancó Local Media.</span>'}</div>
     <h2>Qué puedes decir</h2><div class="panel">${sayings()}</div>`;
     main.querySelectorAll("[data-ren]").forEach((b) => b.onclick = async () => { const n = prompt("Nombre del dispositivo (p. ej. Echo salón)"); if (n != null) { await api(`/api/devices/${enc(b.dataset.ren)}`, { method: "PUT", body: { name: n } }); route(); } });
     main.querySelectorAll("[data-del]").forEach((b) => b.onclick = async () => { if (confirm("¿Olvidar este dispositivo?")) { await api(`/api/devices/${enc(b.dataset.del)}`, { method: "DELETE" }); route(); } });
@@ -321,11 +321,11 @@ const views = {
     const host = location.hostname;
     main.innerHTML = `<h1>Configurar Alexa</h1><p class="muted">Se hace una sola vez. Crearás tu propia skill privada (gratis) que solo tú puedes usar.</p>
     <ol class="steps">
-      <li><b>Haz accesible el puerto público por HTTPS.</b> Alexa solo habla con direcciones <code>https://</code> con certificado válido. PiMedia escucha para Alexa en el puerto <code>${c.public_port}</code> (solo expone la skill y el audio, nunca esta web).
+      <li><b>Haz accesible el puerto público por HTTPS.</b> Alexa solo habla con direcciones <code>https://</code> con certificado válido. Local Media escucha para Alexa en el puerto <code>${c.public_port}</code> (solo expone la skill y el audio, nunca esta web).
         <div class="panel" style="margin-top:8px"><b>Opción A — Cloudflare Tunnel (recomendado, gratis, sin abrir puertos):</b><pre class="code">cloudflared tunnel login
-cloudflared tunnel create pimedia
-cloudflared tunnel route dns pimedia musica.TU-DOMINIO.com
-cloudflared tunnel run --url http://localhost:${c.public_port} pimedia</pre>
+cloudflared tunnel create localmedia
+cloudflared tunnel route dns localmedia musica.TU-DOMINIO.com
+cloudflared tunnel run --url http://localhost:${c.public_port} localmedia</pre>
         <span class="hint">El instalador puede dejarlo como servicio: <code>./install.sh --tunnel</code>. Sin dominio propio: <code>cloudflared tunnel --url http://localhost:${c.public_port}</code> da una URL *.trycloudflare.com (cambia en cada reinicio).</span>
         <p><b>Opción B — ngrok</b> con dominio estático gratis: <code>ngrok http --domain=TU-NOMBRE.ngrok-free.app ${c.public_port}</code></p>
         <p><b>Opción C — Router + DuckDNS + Caddy</b> (abre el 443 hacia la Pi): <code>reverse_proxy localhost:${c.public_port}</code></p></div></li>
@@ -337,7 +337,7 @@ cloudflared tunnel run --url http://localhost:${c.public_port} pimedia</pre>
         <div class="actions"><a class="btn primary" href="/api/skill/model?locale=es-ES">⬇ es-ES.json</a><a class="btn" href="/api/skill/model?locale=es-MX">es-MX</a><a class="btn" href="/api/skill/model?locale=es-US">es-US</a><a class="btn" href="/api/skill/model?locale=en-US">en-US</a><a class="btn" href="/api/skill/model?locale=en-GB">en-GB</a><a class="btn" href="/api/skill/model?locale=es-ES&library=0">Modelo genérico</a></div></li>
       <li><b>Activa el reproductor de audio:</b> <i>Build → Interfaces</i> → activa <b>Audio Player</b> → <i>Save Interfaces</i> → vuelve a pulsar <i>Build skill</i>.</li>
       <li><b>Endpoint:</b> <i>Build → Endpoint</i> → <b>HTTPS</b> → Default Region:<div style="margin:6px 0"><code id="ep">${esc(s.alexa_endpoint || "https://TU-DOMINIO/alexa")}</code> <button class="btn small" id="copyEp">Copiar</button></div>certificado: <b>“My development endpoint has a certificate from a trusted certificate authority”</b> → <i>Save Endpoints</i>.</li>
-      <li><b>(Recomendado) Limita PiMedia a tu skill:</b> copia el <i>Skill ID</i> (amzn1.ask.skill.…) en <a href="#/settings">Ajustes</a>.</li>
+      <li><b>(Recomendado) Limita Local Media a tu skill:</b> copia el <i>Skill ID</i> (amzn1.ask.skill.…) en <a href="#/settings">Ajustes</a>.</li>
       <li><b>Prueba:</b> pestaña <i>Test</i> → cambia “Off” por <b>Development</b>. Ya funciona en todos tus Echo: <b>“Alexa, abre mi colección”</b>.</li>
     </ol>
     <h2>Qué puedes decir</h2><div class="panel">${sayings()}</div>`;
@@ -379,10 +379,10 @@ cloudflared tunnel run --url http://localhost:${c.public_port} pimedia</pre>
     <div class="panel"><h2 style="margin-top:0">🔒 Web y red</h2>
       <label class="f">Contraseña de esta web (vacía = sin contraseña)</label><input type="password" id="pw" value="${esc(c.web_password)}" autocomplete="new-password">
       <div class="row"><div style="flex:1"><label class="f">Puerto web (LAN)</label><input type="number" id="lanp" value="${c.lan_port}"></div><div style="flex:1"><label class="f">Puerto público (Alexa)</label><input type="number" id="pubp" value="${c.public_port}"></div></div>
-      <p class="hint">Los cambios de puerto se aplican al reiniciar: <code>sudo systemctl restart pimedia</code></p></div>
+      <p class="hint">Los cambios de puerto se aplican al reiniciar: <code>sudo systemctl restart localmedia</code></p></div>
 
     <div class="actions"><button class="btn primary" id="save">💾 Guardar ajustes</button></div>
-    <p class="muted" style="margin-top:20px;font-size:13px">PiMedia ${esc(s.version)} · etiquetas: ${s.mutagen ? "mutagen OK" : "<span class='err'>falta mutagen</span>"}</p>`;
+    <p class="muted" style="margin-top:20px;font-size:13px">Local Media ${esc(s.version)} · etiquetas: ${s.mutagen ? "mutagen OK" : "<span class='err'>falta mutagen</span>"}</p>`;
     let folders = c.music_folders.slice(), servers = (c.upnp_servers || []).slice();
     const drawFolders = () => $("#folders").innerHTML = folders.map((f, i) => `<div class="item"><span>📁</span><div class="grow t">${esc(f)}</div><button class="icon-btn" data-rm="${i}">✕</button></div>`).join("") || '<p class="muted">Ninguna carpeta todavía.</p>';
     const drawServers = () => $("#upnpList").innerHTML = servers.map((sv, i) => `<label class="check"><input type="checkbox" data-sv="${i}" ${sv.enabled !== false ? "checked" : ""}> ${esc(sv.name)} <span class="muted" style="font-size:12px">${esc(sv.location)}</span> <button class="icon-btn" data-svrm="${i}">✕</button></label>`).join("");

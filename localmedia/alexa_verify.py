@@ -11,7 +11,7 @@ import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
 
-log = logging.getLogger("pimedia.verify")
+log = logging.getLogger("localmedia.verify")
 
 try:
     from cryptography import x509

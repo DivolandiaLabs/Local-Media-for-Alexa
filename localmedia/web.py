@@ -15,12 +15,12 @@ from flask import Flask, Response, abort, jsonify, request, send_from_directory,
 from . import media, skillmodel, upnp
 from .alexa_verify import VerifyError, verify
 
-log = logging.getLogger("pimedia.web")
+log = logging.getLogger("localmedia.web")
 STATIC = os.path.join(os.path.dirname(__file__), "static")
 
 
 def _pw_tag(pw):
-    return hashlib.sha256(("pimedia:" + pw).encode()).hexdigest()[:24]
+    return hashlib.sha256(("localmedia:" + pw).encode()).hexdigest()[:24]
 
 
 def _art_response(lib, tid):
@@ -33,11 +33,11 @@ def _art_response(lib, tid):
 
 # ======================================================================= publica
 def make_public_app(cfg, lib, skill):
-    app = Flask("pimedia_public")
+    app = Flask("localmedia_public")
 
     @app.get("/")
     def health():
-        return "PiMedia OK"
+        return "Local Media OK"
 
     @app.post("/alexa")
     def alexa():
@@ -61,7 +61,7 @@ def make_public_app(cfg, lib, skill):
         except Exception:
             log.exception("Error atendiendo a Alexa")
             out = {"version": "1.0", "response": {
-                "outputSpeech": {"type": "PlainText", "text": "Ha ocurrido un error en PiMedia."},
+                "outputSpeech": {"type": "PlainText", "text": "Ha ocurrido un error en Local Media."},
                 "shouldEndSession": True}}
         return jsonify(out)
 
@@ -86,8 +86,8 @@ def make_public_app(cfg, lib, skill):
 
 # ======================================================================= red local
 def make_lan_app(cfg, lib, skill):
-    app = Flask("pimedia_lan", static_folder=None)
-    app.secret_key = ("pimedia-" + cfg["secret"]).encode()
+    app = Flask("localmedia_lan", static_folder=None)
+    app.secret_key = ("localmedia-" + cfg["secret"]).encode()
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
     app.json.ensure_ascii = False
 
@@ -140,7 +140,7 @@ def make_lan_app(cfg, lib, skill):
             public_url=base, alexa_endpoint=(base + "/alexa") if base else "",
             devices=len(skill.devices.list()), recent_requests=skill.last_requests[:15],
             ffmpeg=_has_ffmpeg(cfg), mutagen=lib_has_mutagen(),
-            crypto=_has_crypto(), version=__import__("pimedia").__version__)
+            crypto=_has_crypto(), version=__import__("localmedia").__version__)
 
     @app.get("/api/config")
     def get_config():
@@ -195,9 +195,9 @@ def make_lan_app(cfg, lib, skill):
         try:
             with urllib.request.urlopen(base + "/", timeout=10) as r:
                 txt = r.read(200).decode(errors="ignore")
-            ok = "PiMedia OK" in txt
+            ok = "Local Media OK" in txt
             return jsonify(ok=ok, msg="Accesible desde Internet." if ok else
-                           f"Responde, pero no es PiMedia: {txt[:80]}")
+                           f"Responde, pero no es Local Media: {txt[:80]}")
         except Exception as e:
             return jsonify(ok=False, msg=f"No se puede acceder: {e}")
 

@@ -11,7 +11,7 @@ from html import escape
 
 from .textnorm import norm
 
-log = logging.getLogger("pimedia.upnp")
+log = logging.getLogger("localmedia.upnp")
 
 NS = {
     "d": "urn:schemas-upnp-org:device-1-0",

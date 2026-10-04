@@ -7,7 +7,7 @@ import urllib.request
 
 from flask import Response, request, send_file, abort
 
-log = logging.getLogger("pimedia.media")
+log = logging.getLogger("localmedia.media")
 
 # Lo que los Echo reproducen directamente (AAC/MP4 y MP3).
 NATIVE_EXT = {".mp3", ".m4a", ".m4b", ".aac", ".mp4"}
