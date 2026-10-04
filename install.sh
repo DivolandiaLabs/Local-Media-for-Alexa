@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Instalador de Local Media para Raspberry Pi OS / Debian / Ubuntu (ARM64, ARMHF o x86_64).
 #   ./install.sh                 instala y arranca el servicio
-#   ./install.sh --tunnel        ademas instala cloudflared (Cloudflare Tunnel)
+#   ./install.sh --cloudflare    ademas deja un tunel rapido de Cloudflare como servicio
+#                                (gratis, sin dominio ni limite de datos; recomendado)
+#   ./install.sh --tunnel        instala cloudflared para un tunel con dominio propio
 #   ./install.sh --music /media/usb/Musica
 set -euo pipefail
 
@@ -10,11 +12,13 @@ RUN_USER="${SUDO_USER:-$USER}"
 RUN_HOME="$(getent passwd "$RUN_USER" | cut -d: -f6)"
 DATA_DIR="$RUN_HOME/.localmedia"
 WANT_TUNNEL=0
+WANT_QUICK=0
 MUSIC=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --tunnel) WANT_TUNNEL=1 ;;
+    --cloudflare) WANT_QUICK=1 ;;
     --music) MUSIC+=("$2"); shift ;;
     --data) DATA_DIR="$2"; shift ;;
     *) echo "Opcion desconocida: $1"; exit 1 ;;
@@ -99,7 +103,8 @@ EOF
 $SUDO systemctl daemon-reload
 $SUDO systemctl enable --now localmedia
 
-if [[ $WANT_TUNNEL -eq 1 ]]; then
+install_cloudflared() {
+  if command -v cloudflared >/dev/null 2>&1; then return; fi
   say "Instalando cloudflared"
   ARCH="$(dpkg --print-architecture)"   # arm64 | armhf | amd64
   TMP="$(mktemp -d)"
@@ -107,6 +112,49 @@ if [[ $WANT_TUNNEL -eq 1 ]]; then
     "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${ARCH}.deb"
   $SUDO dpkg -i "$TMP/cloudflared.deb"
   rm -rf "$TMP"
+}
+
+if [[ $WANT_QUICK -eq 1 ]]; then
+  install_cloudflared
+  say "Creando el servicio 'cloudflared-localmedia' (tunel rapido de Cloudflare)"
+  # Local Media lee la direccion del tunel en http://127.0.0.1:20241/quicktunnel y
+  # actualiza la skill de Alexa cuando cambia (en cada reinicio de la Pi).
+  CF_BIN="$(command -v cloudflared)"
+  $SUDO tee /etc/systemd/system/cloudflared-localmedia.service >/dev/null <<EOF
+[Unit]
+Description=Tunel rapido de Cloudflare para Local Media
+After=network-online.target localmedia.service
+Wants=network-online.target
+
+[Service]
+User=$RUN_USER
+ExecStart=$CF_BIN tunnel --no-autoupdate --metrics 127.0.0.1:20241 --url http://localhost:8765
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  $SUDO systemctl daemon-reload
+  $SUDO systemctl enable --now cloudflared-localmedia
+  # Alexa no acepta los dominios gratuitos de ngrok: si habia un tunel ngrok, se apaga
+  if [[ -f /etc/systemd/system/ngrok-localmedia.service ]]; then
+    $SUDO systemctl disable --now ngrok-localmedia || true
+    echo "  (servicio ngrok-localmedia apagado: Alexa no acepta los dominios gratis de ngrok)"
+  fi
+  URL=""
+  for _ in $(seq 1 15); do
+    URL=$(curl -s --max-time 2 http://127.0.0.1:20241/quicktunnel \
+          | grep -o '[a-z0-9-]*[.]trycloudflare[.]com' || true)
+    [[ -n "$URL" ]] && break
+    sleep 2
+  done
+  echo "  Direccion del tunel: https://${URL:-(todavia arrancando; mirala en la web)}"
+  echo "  Local Media la detecta sola y, si estas conectado con Amazon, actualiza la skill."
+fi
+
+if [[ $WANT_TUNNEL -eq 1 ]]; then
+  install_cloudflared
   cat <<EOF
 
   cloudflared instalado. Para crear un tunel con TU dominio (gestionado en Cloudflare):

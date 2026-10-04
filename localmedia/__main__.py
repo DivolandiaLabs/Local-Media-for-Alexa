@@ -11,6 +11,7 @@ from .amazon import Amazon
 from .config import Config
 from .db import DB
 from .library import Library
+from .tunnel import TunnelWatcher
 from .web import make_lan_app, make_public_app
 
 log = logging.getLogger("localmedia")
@@ -77,6 +78,8 @@ def main():
     skill = AlexaSkill(cfg, lib, db)
     amazon = Amazon(cfg, lib)
     lib.on_scan_done = amazon.auto_update_after_scan
+    tunnel = TunnelWatcher(cfg, amazon)
+    tunnel.start()
     log.info("Local Media %s - datos en %s", __version__, args.data)
     from .alexa_verify import HAVE_CRYPTO
     if cfg["verify_signatures"] and not HAVE_CRYPTO:

@@ -211,6 +211,34 @@ class Amazon:
         if self.connected() and self.acc().get("skill_id") and self.cfg["amazon_auto_model"]:
             self.start_model_update(only_if_changed=True)
 
+    def can_update_endpoint(self):
+        return self.connected() and bool(self.acc().get("skill_id"))
+
+    def start_endpoint_update(self):
+        """Solo cambia la direccion de la skill (cuando el tunel cambia de URL)."""
+        return self._run("endpoint", self._update_endpoint)
+
+    def _update_endpoint(self):
+        base = self.cfg.public_base()
+        sid = self.acc().get("skill_id")
+        if not (base.startswith("https://") and sid):
+            raise AmazonError("Falta la URL pública o la skill.")
+        ssl_type = skillmodel.ssl_certificate_type(base)
+        self._step(f"La dirección del túnel ha cambiado: actualizando la skill a {base}…")
+        self._api("PUT", f"/v1/skills/{sid}/stages/development/manifest",
+                  skillmodel.manifest(base, self._locales(), ssl_type))
+        self._wait(sid, "manifest")
+        self._remember_endpoint(base)
+        self._step("Skill actualizada con la nueva dirección.")
+
+    def _remember_endpoint(self, base):
+        a = self.acc()
+        a["endpoint_url"] = base
+        self.cfg.update({"amazon": a})
+
+    def endpoint_url(self):
+        return self.acc().get("endpoint_url")
+
     # ------------------------------------------------------------ crear / actualizar la skill
     def _locales(self):
         locs = [l for l in (self.cfg["skill_locales"] or []) if l in skillmodel.ALL_LOCALES]
@@ -250,6 +278,7 @@ class Amazon:
             a["skill_id"] = sid
             self.cfg.update({"amazon": a})
         self._wait(sid, "manifest")
+        self._remember_endpoint(base)
         self._upload_models(sid, locales)
         self._step("Activando la skill en tus dispositivos Echo…")
         self._api("PUT", f"/v1/skills/{sid}/stages/development/enablement")

@@ -318,18 +318,21 @@ const views = {
 
   async setup() {
     const [s, c] = await Promise.all([api("/api/status"), api("/api/config")]);
+    const tunnelUrl = s.tunnel || "";
     main.innerHTML = `<h1>Configurar Alexa</h1><p class="muted">Se hace una sola vez. Tendrás tu propia skill privada (gratis) que solo funciona en tus Echo.</p>
     <ol class="steps">
       <li><b>Haz accesible el puerto público por HTTPS.</b> Alexa solo habla con direcciones <code>https://</code> con certificado válido. Local Media escucha para Alexa en el puerto <code>${c.public_port}</code> (solo expone la skill y el audio, nunca esta web).
-        <div class="panel" style="margin-top:8px"><b>Opción A — ngrok</b> (gratis, sin dominio ni tocar el router): crea una cuenta en ngrok.com, reserva tu dominio gratuito y ejecuta <code>ngrok http --domain=TU-NOMBRE.ngrok-free.app ${c.public_port}</code>
-        <p><b>Opción B — Cloudflare Tunnel</b> con un dominio propio:</p><pre class="code">cloudflared tunnel login
+        <div class="panel" style="margin-top:8px"><b>Opción A — Túnel rápido de Cloudflare</b> (recomendado: gratis, sin cuenta, sin dominio, sin límite de datos y sin tocar el router). En la terminal de la Raspberry, dentro de la carpeta de Local Media:<pre class="code">./install.sh --cloudflare</pre>
+        <span class="hint">La dirección (<code>xxx.trycloudflare.com</code>) cambia cada vez que se reinicia la Pi, pero Local Media la detecta sola y, si has conectado con Amazon, actualiza la skill automáticamente.${tunnelUrl ? ` Ahora mismo: <code>${esc(tunnelUrl)}</code>` : ""}</span>
+        <p class="hint">⚠ Los dominios gratuitos de ngrok (<code>*.ngrok-free.dev</code>) no funcionan con Alexa: Amazon no llega a conectar.</p>
+        <p><b>Opción B — Cloudflare Tunnel</b> con un dominio propio (dirección fija):</p><pre class="code">cloudflared tunnel login
 cloudflared tunnel create localmedia
 cloudflared tunnel route dns localmedia musica.TU-DOMINIO.com
 cloudflared tunnel run --url http://localhost:${c.public_port} localmedia</pre>
         <span class="hint">El instalador puede instalar cloudflared: <code>./install.sh --tunnel</code>.</span>
         <p><b>Opción C — Router + DuckDNS + Caddy</b> (abre el 443 hacia la Pi): <code>reverse_proxy localhost:${c.public_port}</code></p></div></li>
       <li><b>Escribe aquí la URL pública</b> y pruébala.
-        <div class="row" style="margin-top:8px"><input type="url" id="pubUrl" placeholder="https://tu-nombre.ngrok-free.app" value="${esc(c.public_url)}" style="flex:1 1 180px;min-width:0"><button class="btn primary" id="savePub">Guardar y probar</button></div><p id="pubRes" class="hint"></p></li>
+        <div class="row" style="margin-top:8px"><input type="url" id="pubUrl" placeholder="https://palabras.trycloudflare.com" value="${esc(c.public_url)}" style="flex:1 1 180px;min-width:0"><button class="btn primary" id="savePub">Guardar y probar</button></div><p id="pubRes" class="hint"></p></li>
       <li><b>Conecta con Amazon.</b> Local Media crea y configura la skill él solo.
         <div id="amz" class="panel amz" style="margin-top:8px"><span class="muted">Cargando…</span></div></li>
     </ol>

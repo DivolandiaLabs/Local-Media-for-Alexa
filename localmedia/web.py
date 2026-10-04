@@ -14,6 +14,7 @@ from flask import Flask, Response, abort, jsonify, request, send_from_directory,
 
 from . import media, skillmodel, upnp
 from .alexa_verify import VerifyError, verify
+from .tunnel import quick_tunnel_url
 
 log = logging.getLogger("localmedia.web")
 STATIC = os.path.join(os.path.dirname(__file__), "static")
@@ -185,7 +186,8 @@ def make_lan_app(cfg, lib, skill, amazon=None):
             public_url=base, alexa_endpoint=(base + "/alexa") if base else "",
             devices=len(skill.devices.list()), recent_requests=skill.last_requests[:15],
             ffmpeg=_has_ffmpeg(cfg), mutagen=lib_has_mutagen(),
-            crypto=_has_crypto(), version=__import__("localmedia").__version__)
+            crypto=_has_crypto(), version=__import__("localmedia").__version__,
+            tunnel=quick_tunnel_url(cfg["quicktunnel_metrics"]))
 
     @app.get("/api/config")
     def get_config():

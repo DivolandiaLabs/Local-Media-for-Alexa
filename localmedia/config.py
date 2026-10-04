@@ -32,6 +32,8 @@ DEFAULTS = {
     "amazon": {},                # tokens, vendor_id, skill_id (nunca se envia a la web)
     "skill_locales": ["es-ES"],
     "amazon_auto_model": True,   # subir el modelo de voz tras cada escaneo si cambia
+    # Tunel rapido de Cloudflare: de aqui se lee su direccion (cambia en cada reinicio)
+    "quicktunnel_metrics": "http://127.0.0.1:20241",
 }
 PRIVATE = ("secret", "amazon")
 
