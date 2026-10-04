@@ -3,6 +3,9 @@
 Con library=None usa valores de ejemplo; con la biblioteca, rellena los tipos de slot
 con tus artistas, albumes, canciones... (mejora mucho el reconocimiento)."""
 import re
+import socket
+import ssl
+import urllib.parse
 
 INVOCATION = {"es": "mi colección", "en": "my collection"}
 
@@ -226,7 +229,7 @@ def build(locale="es-ES", names=None, per_type=2500):
 ALL_LOCALES = ("es-ES", "es-MX", "es-US", "en-US", "en-GB", "en-CA", "en-AU", "en-IN")
 
 
-def manifest(public_url="https://TU-DOMINIO", only=None):
+def manifest(public_url="https://TU-DOMINIO", only=None, ssl_type="Trusted"):
     """only: lista de idiomas a incluir (por defecto todos). Con SMAPI conviene poner
     solo los idiomas a los que se les sube modelo de voz."""
     base = (public_url or "https://TU-DOMINIO").rstrip("/")
@@ -254,6 +257,26 @@ def manifest(public_url="https://TU-DOMINIO", only=None):
                                  "locales": {l: {"privacyPolicyUrl": f"{base}/privacidad"}
                                              for l in locales}},
         "apis": {"custom": {
-            "endpoint": {"uri": f"{base}/alexa", "sslCertificateType": "Trusted"},
+            "endpoint": {"uri": f"{base}/alexa", "sslCertificateType": ssl_type},
             "interfaces": [{"type": "AUDIO_PLAYER"}]}},
     }}
+
+
+def ssl_certificate_type(public_url):
+    """Alexa distingue certificados normales ("Trusted") de los comodin ("Wildcard",
+    p. ej. *.ngrok-free.dev o *.trycloudflare.com). Si se indica el tipo equivocado,
+    Alexa ni siquiera llama a la skill ("No puedo conectar con la skill")."""
+    host = urllib.parse.urlparse(public_url or "").hostname
+    if not host:
+        return "Trusted"
+    try:
+        ctx = ssl.create_default_context()
+        with socket.create_connection((host, 443), timeout=10) as sock:
+            with ctx.wrap_socket(sock, server_hostname=host) as tls:
+                cert = tls.getpeercert()
+    except (OSError, ssl.SSLError):
+        return "Trusted"
+    names = [v.lower() for k, v in cert.get("subjectAltName", ()) if k == "DNS"]
+    if host.lower() in names:
+        return "Trusted"
+    return "Wildcard" if any(n.startswith("*.") for n in names) else "Trusted"

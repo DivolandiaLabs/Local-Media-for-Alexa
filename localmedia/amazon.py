@@ -224,7 +224,8 @@ class Amazon:
         if not a.get("vendor_id"):
             raise AmazonError("No estás conectado con Amazon.")
         locales = self._locales()
-        man = skillmodel.manifest(base, locales)
+        ssl_type = skillmodel.ssl_certificate_type(base)
+        man = skillmodel.manifest(base, locales, ssl_type)
         sid = a.get("skill_id")
         if sid:
             try:
@@ -236,7 +237,8 @@ class Amazon:
                 else:
                     raise
         if sid:
-            self._step("Actualizando tu skill (nombre, dirección, reproductor de audio)…")
+            self._step("Actualizando tu skill (nombre, dirección, reproductor de audio, "
+                       f"certificado {'comodín' if ssl_type == 'Wildcard' else 'normal'})…")
             self._api("PUT", f"/v1/skills/{sid}/stages/development/manifest", man)
         else:
             self._step("Creando tu skill «Mi Colección»…")
