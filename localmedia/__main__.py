@@ -7,6 +7,7 @@ import time
 
 from . import __version__
 from .alexa import AlexaSkill
+from .amazon import Amazon
 from .config import Config
 from .db import DB
 from .library import Library
@@ -74,6 +75,8 @@ def main():
     db = DB(os.path.join(args.data, "library.db"))
     lib = Library(cfg, db)
     skill = AlexaSkill(cfg, lib, db)
+    amazon = Amazon(cfg, lib)
+    lib.on_scan_done = amazon.auto_update_after_scan
     log.info("Local Media %s - datos en %s", __version__, args.data)
     from .alexa_verify import HAVE_CRYPTO
     if cfg["verify_signatures"] and not HAVE_CRYPTO:
@@ -85,8 +88,8 @@ def main():
         lib.start_scan(False)
     threading.Thread(target=rescan_loop, args=(cfg, lib), daemon=True).start()
 
-    pub = make_public_app(cfg, lib, skill)
-    lan = make_lan_app(cfg, lib, skill)
+    pub = make_public_app(cfg, lib, skill, amazon)
+    lan = make_lan_app(cfg, lib, skill, amazon)
     threading.Thread(target=serve, args=(pub, cfg["public_bind"], int(cfg["public_port"]),
                                          "Puerto publico (Alexa)"), daemon=True).start()
     serve(lan, cfg["lan_bind"], int(cfg["lan_port"]), "Web de gestion")

@@ -26,7 +26,14 @@ DEFAULTS = {
     "upnp_servers": [],          # [{location, name, enabled}]
     "max_queue": 1000,
     "shuffle_artist": False,     # al pedir un artista, mezclar sus canciones
+    # Conectar con Amazon (perfil de seguridad de Login with Amazon del usuario)
+    "lwa_client_id": "",
+    "lwa_client_secret": "",
+    "amazon": {},                # tokens, vendor_id, skill_id (nunca se envia a la web)
+    "skill_locales": ["es-ES"],
+    "amazon_auto_model": True,   # subir el modelo de voz tras cada escaneo si cambia
 }
+PRIVATE = ("secret", "amazon")
 
 
 class Config:
@@ -62,12 +69,17 @@ class Config:
             with open(tmp, "w", encoding="utf-8") as f:
                 json.dump(self.data, f, indent=2, ensure_ascii=False)
             os.replace(tmp, self.path)
+            try:
+                os.chmod(self.path, 0o600)  # lleva tokens de Amazon
+            except OSError:
+                pass
 
     def public_base(self):
         return (self["public_url"] or "").rstrip("/")
 
     def public_view(self):
-        """Config para la web (sin el secreto)."""
-        d = {k: v for k, v in self.data.items() if k != "secret"}
-        d["web_password"] = "********" if self.data.get("web_password") else ""
+        """Config para la web (sin secretos)."""
+        d = {k: v for k, v in self.data.items() if k not in PRIVATE}
+        for k in ("web_password", "lwa_client_secret"):
+            d[k] = "********" if self.data.get(k) else ""
         return d

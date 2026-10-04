@@ -223,7 +223,12 @@ def build(locale="es-ES", names=None, per_type=2500):
         "invocationName": INVOCATION[lang], "intents": intents, "types": types}}}
 
 
-def manifest(public_url="https://TU-DOMINIO"):
+ALL_LOCALES = ("es-ES", "es-MX", "es-US", "en-US", "en-GB", "en-CA", "en-AU", "en-IN")
+
+
+def manifest(public_url="https://TU-DOMINIO", only=None):
+    """only: lista de idiomas a incluir (por defecto todos). Con SMAPI conviene poner
+    solo los idiomas a los que se les sube modelo de voz."""
     base = (public_url or "https://TU-DOMINIO").rstrip("/")
 
     def loc(name, summary, desc, phrases):
@@ -238,21 +243,17 @@ def manifest(public_url="https://TU-DOMINIO"):
              "Play the music stored on your Raspberry Pi or NAS on your Echo devices.",
              ["Alexa, open my collection", "Alexa, ask my collection to play Queen",
               "Alexa, ask my collection to play the album Thriller"])
-    locales = {l: es for l in ("es-ES", "es-MX", "es-US")}
-    locales.update({l: en for l in ("en-US", "en-GB", "en-CA", "en-AU", "en-IN")})
+    locales = {l: (es if l.startswith("es") else en) for l in (only or ALL_LOCALES)}
     return {"manifest": {
         "manifestVersion": "1.0",
-        "publishingInformation": {"locales": locales, "isAvailableWorldwide": False,
-                                  "distributionCountries": [], "category": "STREAMING_SERVICE",
-                                  "testingInstructions": "Skill privada."},
+        "publishingInformation": {"locales": locales, "isAvailableWorldwide": True,
+                                  "testingInstructions": "Skill privada de Local Media."},
         "privacyAndCompliance": {"allowsPurchases": False, "usesPersonalInfo": False,
                                  "isChildDirected": False, "isExportCompliant": True,
                                  "containsAds": False,
-                                 "locales": {l: {} for l in locales}},
+                                 "locales": {l: {"privacyPolicyUrl": f"{base}/privacidad"}
+                                             for l in locales}},
         "apis": {"custom": {
             "endpoint": {"uri": f"{base}/alexa", "sslCertificateType": "Trusted"},
-            "interfaces": [{"type": "AUDIO_PLAYER"}],
-            "regions": {r: {"endpoint": {"uri": f"{base}/alexa",
-                                         "sslCertificateType": "Trusted"}}
-                        for r in ("EU", "NA", "FE")}}},
+            "interfaces": [{"type": "AUDIO_PLAYER"}]}},
     }}

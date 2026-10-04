@@ -1,10 +1,14 @@
+/* Tema: oscuro por defecto; claro si el sistema lo pide (modo Automatico)
+   o si se elige "Claro" en el selector (data-theme en <html>). */
 :root{
   --bg:#0f1117;--panel:#161922;--panel2:#1d212c;--line:#2a2f3c;--text:#e8eaf0;--muted:#9aa1b2;
   --accent:#22d3ee;--accent2:#6366f1;--ok:#34d399;--bad:#f87171;--warn:#fbbf24;--r:12px;
+  --shadow:0 10px 30px rgba(0,0,0,.35);color-scheme:dark;
 }
 @media (prefers-color-scheme: light){
-  :root:not([data-theme="dark"]){--bg:#f4f5f8;--panel:#fff;--panel2:#eef0f5;--line:#dde1ea;--text:#1a1d26;--muted:#5f677a;--accent:#0891b2}
+  :root:not([data-theme="dark"]){--bg:#f4f5f8;--panel:#fff;--panel2:#eef0f5;--line:#dde1ea;--text:#1a1d26;--muted:#5f677a;--accent:#0891b2;--accent2:#4f46e5;--ok:#059669;--bad:#dc2626;--warn:#d97706;--shadow:0 8px 24px rgba(20,30,60,.12);color-scheme:light}
 }
+:root[data-theme="light"]{--bg:#f4f5f8;--panel:#fff;--panel2:#eef0f5;--line:#dde1ea;--text:#1a1d26;--muted:#5f677a;--accent:#0891b2;--accent2:#4f46e5;--ok:#059669;--bad:#dc2626;--warn:#d97706;--shadow:0 8px 24px rgba(20,30,60,.12);color-scheme:light}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,Ubuntu,sans-serif}
 a{color:var(--accent);text-decoration:none}
@@ -20,7 +24,8 @@ button{font:inherit;color:inherit}
 .side nav a.active{background:linear-gradient(90deg,rgba(34,211,238,.18),rgba(99,102,241,.12));color:var(--accent)}
 .sep{height:1px;background:var(--line);margin:8px 4px}
 .search input{width:100%;padding:9px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text)}
-.scan-badge{margin-top:auto;font-size:13px;color:var(--muted);background:var(--panel2);padding:8px 10px;border-radius:8px}
+.side-foot{margin-top:auto;display:flex;flex-direction:column;gap:8px}
+.scan-badge{font-size:13px;color:var(--muted);background:var(--panel2);padding:8px 10px;border-radius:8px}
 .topbar{display:none}
 .main{grid-area:main;overflow:auto;padding:24px 28px 40px}
 h1{font-size:26px;margin:0 0 4px}
@@ -39,7 +44,7 @@ h2{font-size:19px;margin:28px 0 12px}
 .icon-btn:hover{background:var(--panel2)}
 .icon-btn.on{color:var(--accent);background:var(--panel2)}
 .head{display:flex;gap:20px;align-items:flex-end;margin-bottom:18px;flex-wrap:wrap}
-.head img{width:180px;height:180px;border-radius:var(--r);object-fit:cover;background:var(--panel2);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.head img{width:180px;height:180px;border-radius:var(--r);object-fit:cover;background:var(--panel2);box-shadow:var(--shadow)}
 .head .meta{flex:1;min-width:220px}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:18px}
@@ -119,3 +124,30 @@ input[type=range]{accent-color:var(--accent)}
   table.tracks .hide-m{display:none}
   .grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px}
 }
+/* selector de tema */
+.theme-switch{display:flex;gap:4px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px}
+.theme-switch button{flex:1;border:0;background:none;border-radius:999px;padding:5px 8px;cursor:pointer;font-size:13px;color:var(--muted)}
+.theme-switch button.on{background:var(--panel);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.topbar .theme-btn{margin-left:auto}
+/* Conectar con Amazon */
+.btn.amazon{background:#ff9900;color:#111;border:0;font-weight:700;letter-spacing:.3px;padding:12px 22px;font-size:15px}
+.btn.amazon:hover{background:#ffad33}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.amz ol.sub{padding-left:20px}
+.amz ol.sub li{margin-bottom:10px}
+.copyrow{display:flex;gap:8px;align-items:center;margin:6px 0;flex-wrap:wrap}
+.copyrow code{flex:1;min-width:0}
+.locales{display:flex;flex-wrap:wrap;gap:4px 18px}
+.locales .check{margin:4px 0}
+.amz-log{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:12px 0;font-size:14px}
+.amz-log div{padding:3px 0}
+.amz-log .done{color:var(--muted)}
+.amz-log .now{color:var(--text);font-weight:600}
+.spin{display:inline-block;width:12px;height:12px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;vertical-align:-1px}
+@keyframes spin{to{transform:rotate(360deg)}}
+details.manual summary{cursor:pointer}
+@media (prefers-reduced-motion: reduce){.spin{animation:none}}
+/* nada debe provocar desplazamiento horizontal en pantallas estrechas */
+.main{min-width:0;overflow-x:hidden}
+.main a,.main p,.main li{overflow-wrap:anywhere}
+.main input{max-width:100%}

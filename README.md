@@ -117,6 +117,26 @@ los Echo de tu cuenta. La web genera el modelo de voz **con los nombres de tu bi
 para que Alexa los reconozca mejor. En [skill/](skill) hay también un modelo genérico y
 el manifiesto `skill.json` (para `ask-cli`).
 
+### Conectar con Amazon (automático)
+
+En **Configurar Alexa** está el botón **CONECTAR CON AMAZON**: inicias sesión con tu cuenta
+de Amazon y Local Media crea la skill solo (modelo de voz con tu biblioteca, reproductor de
+audio, dirección y activación en tus Echo). Después vuelve a subir el modelo de voz
+cada vez que un escaneo cambia la biblioteca.
+
+Antes, una sola vez, Amazon pide crear un **perfil de seguridad de Login with Amazon**
+(la web te dice qué pegar en cada campo):
+
+1. [Login with Amazon](https://developer.amazon.com/loginwithamazon/console/site/lwa/overview.html)
+   → *Create a New Security Profile* → nombre, descripción y como *Consent Privacy Notice URL*
+   `https://TU-URL-PUBLICA/privacidad`.
+2. *Web Settings* → *Allowed Return URLs*: `https://TU-URL-PUBLICA/amazon/callback`.
+3. Copia el *Client ID* y el *Client Secret* en Local Media.
+
+El secreto y los permisos de Amazon se guardan solo en tu Pi (`~/.localmedia/config.json`,
+permisos 600) y nunca se muestran en la web. *Desconectar* los borra; la skill sigue
+funcionando.
+
 Nombre de invocación: **"mi colección"** (en inglés *"my collection"*). Se puede cambiar
 en la consola de Alexa (*Invocation*); Local Media no depende de él.
 

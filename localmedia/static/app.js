@@ -318,38 +318,42 @@ const views = {
 
   async setup() {
     const [s, c] = await Promise.all([api("/api/status"), api("/api/config")]);
-    const host = location.hostname;
-    main.innerHTML = `<h1>Configurar Alexa</h1><p class="muted">Se hace una sola vez. Crearás tu propia skill privada (gratis) que solo tú puedes usar.</p>
+    main.innerHTML = `<h1>Configurar Alexa</h1><p class="muted">Se hace una sola vez. Tendrás tu propia skill privada (gratis) que solo funciona en tus Echo.</p>
     <ol class="steps">
       <li><b>Haz accesible el puerto público por HTTPS.</b> Alexa solo habla con direcciones <code>https://</code> con certificado válido. Local Media escucha para Alexa en el puerto <code>${c.public_port}</code> (solo expone la skill y el audio, nunca esta web).
-        <div class="panel" style="margin-top:8px"><b>Opción A — Cloudflare Tunnel (recomendado, gratis, sin abrir puertos):</b><pre class="code">cloudflared tunnel login
+        <div class="panel" style="margin-top:8px"><b>Opción A — ngrok</b> (gratis, sin dominio ni tocar el router): crea una cuenta en ngrok.com, reserva tu dominio gratuito y ejecuta <code>ngrok http --domain=TU-NOMBRE.ngrok-free.app ${c.public_port}</code>
+        <p><b>Opción B — Cloudflare Tunnel</b> con un dominio propio:</p><pre class="code">cloudflared tunnel login
 cloudflared tunnel create localmedia
 cloudflared tunnel route dns localmedia musica.TU-DOMINIO.com
 cloudflared tunnel run --url http://localhost:${c.public_port} localmedia</pre>
-        <span class="hint">El instalador puede dejarlo como servicio: <code>./install.sh --tunnel</code>. Sin dominio propio: <code>cloudflared tunnel --url http://localhost:${c.public_port}</code> da una URL *.trycloudflare.com (cambia en cada reinicio).</span>
-        <p><b>Opción B — ngrok</b> con dominio estático gratis: <code>ngrok http --domain=TU-NOMBRE.ngrok-free.app ${c.public_port}</code></p>
+        <span class="hint">El instalador puede instalar cloudflared: <code>./install.sh --tunnel</code>.</span>
         <p><b>Opción C — Router + DuckDNS + Caddy</b> (abre el 443 hacia la Pi): <code>reverse_proxy localhost:${c.public_port}</code></p></div></li>
       <li><b>Escribe aquí la URL pública</b> y pruébala.
-        <div class="row" style="margin-top:8px"><input type="url" id="pubUrl" placeholder="https://musica.tudominio.com" value="${esc(c.public_url)}" style="flex:1;min-width:220px"><button class="btn primary" id="savePub">Guardar y probar</button></div><p id="pubRes" class="hint"></p></li>
-      <li><b>Crea la skill</b> en <a href="https://developer.amazon.com/alexa/console/ask" target="_blank" rel="noopener">developer.amazon.com/alexa/console/ask</a> (con la misma cuenta de Amazon que tus Echo):
-        <ul><li><i>Create Skill</i> → nombre “Mi Colección”, idioma <b>Spanish (ES)</b> (añade más idiomas si quieres).</li><li>Tipo <b>Other</b> → modelo <b>Custom</b> → hosting <b>Provision your own</b> → plantilla <b>Start from Scratch</b>.</li></ul></li>
-      <li><b>Pega el modelo de voz.</b> En <i>Build → Interaction Model → JSON Editor</i>, arrastra este archivo y pulsa <i>Save</i> y <i>Build skill</i>. Lleva los nombres de tu biblioteca para que Alexa los entienda mejor (vuelve a descargarlo y subirlo cuando añadas mucha música).
-        <div class="actions"><a class="btn primary" href="/api/skill/model?locale=es-ES">⬇ es-ES.json</a><a class="btn" href="/api/skill/model?locale=es-MX">es-MX</a><a class="btn" href="/api/skill/model?locale=es-US">es-US</a><a class="btn" href="/api/skill/model?locale=en-US">en-US</a><a class="btn" href="/api/skill/model?locale=en-GB">en-GB</a><a class="btn" href="/api/skill/model?locale=es-ES&library=0">Modelo genérico</a></div></li>
-      <li><b>Activa el reproductor de audio:</b> <i>Build → Interfaces</i> → activa <b>Audio Player</b> → <i>Save Interfaces</i> → vuelve a pulsar <i>Build skill</i>.</li>
-      <li><b>Endpoint:</b> <i>Build → Endpoint</i> → <b>HTTPS</b> → Default Region:<div style="margin:6px 0"><code id="ep">${esc(s.alexa_endpoint || "https://TU-DOMINIO/alexa")}</code> <button class="btn small" id="copyEp">Copiar</button></div>certificado: <b>“My development endpoint has a certificate from a trusted certificate authority”</b> → <i>Save Endpoints</i>.</li>
-      <li><b>(Recomendado) Limita Local Media a tu skill:</b> copia el <i>Skill ID</i> (amzn1.ask.skill.…) en <a href="#/settings">Ajustes</a>.</li>
-      <li><b>Prueba:</b> pestaña <i>Test</i> → cambia “Off” por <b>Development</b>. Ya funciona en todos tus Echo: <b>“Alexa, abre mi colección”</b>.</li>
+        <div class="row" style="margin-top:8px"><input type="url" id="pubUrl" placeholder="https://tu-nombre.ngrok-free.app" value="${esc(c.public_url)}" style="flex:1 1 180px;min-width:0"><button class="btn primary" id="savePub">Guardar y probar</button></div><p id="pubRes" class="hint"></p></li>
+      <li><b>Conecta con Amazon.</b> Local Media crea y configura la skill él solo.
+        <div id="amz" class="panel amz" style="margin-top:8px"><span class="muted">Cargando…</span></div></li>
     </ol>
+    <details class="panel manual"><summary><b>Prefiero crear la skill a mano</b> <span class="muted">(sin conectar con Amazon)</span></summary>
+    <ol class="steps" style="margin-top:14px">
+      <li><b>Crea la skill</b> en <a href="https://developer.amazon.com/alexa/console/ask" target="_blank" rel="noopener">developer.amazon.com/alexa/console/ask</a> (con la misma cuenta de Amazon que tus Echo): <i>Create Skill</i> → nombre “Mi Colección”, idioma <b>Spanish (ES)</b> → tipo <b>Other</b> → <b>Custom</b> → <b>Provision your own</b> → <b>Start from Scratch</b>.</li>
+      <li><b>Pega el modelo de voz</b> en <i>Build → Interaction Model → JSON Editor</i>, <i>Save</i> y <i>Build skill</i>.
+        <div class="actions"><a class="btn primary" href="/api/skill/model?locale=es-ES">⬇ es-ES.json</a><a class="btn" href="/api/skill/model?locale=es-MX">es-MX</a><a class="btn" href="/api/skill/model?locale=es-US">es-US</a><a class="btn" href="/api/skill/model?locale=en-US">en-US</a><a class="btn" href="/api/skill/model?locale=en-GB">en-GB</a><a class="btn" href="/api/skill/model?locale=es-ES&library=0">Modelo genérico</a></div></li>
+      <li><b>Activa el reproductor de audio:</b> <i>Build → Interfaces</i> → <b>Audio Player</b> → <i>Save Interfaces</i> → <i>Build skill</i>.</li>
+      <li><b>Endpoint:</b> <i>Build → Endpoint</i> → <b>HTTPS</b> → Default Region:<div style="margin:6px 0"><code id="ep">${esc(s.alexa_endpoint || "https://TU-DOMINIO/alexa")}</code> <button class="btn small" id="copyEp">Copiar</button></div>certificado: <b>“My development endpoint has a certificate from a trusted certificate authority”</b>.</li>
+      <li><b>Limita Local Media a tu skill:</b> copia el <i>Skill ID</i> (amzn1.ask.skill.…) en <a href="#/settings">Ajustes</a>.</li>
+      <li><b>Prueba:</b> pestaña <i>Test</i> → <b>Development</b>.</li>
+    </ol></details>
     <h2>Qué puedes decir</h2><div class="panel">${sayings()}</div>`;
-    $("#copyEp").onclick = () => navigator.clipboard?.writeText($("#ep").textContent).then(() => toast("Copiado"));
+    $("#copyEp").onclick = () => copy($("#ep").textContent);
     $("#savePub").onclick = async () => {
       await api("/api/config", { method: "POST", body: { public_url: $("#pubUrl").value.trim() } });
       $("#pubRes").textContent = "Probando…";
       const r = await api("/api/test-public");
       $("#pubRes").innerHTML = `<span class="${r.ok ? "ok" : "err"}">${r.ok ? "✔" : "✖"} ${esc(r.msg)}</span>`;
       const s2 = await api("/api/status"); $("#ep").textContent = s2.alexa_endpoint || "https://TU-DOMINIO/alexa";
+      drawAmazon();
     };
-    void host;
+    drawAmazon();
   },
 
   async settings() {
@@ -411,6 +415,77 @@ cloudflared tunnel run --url http://localhost:${c.public_port} localmedia</pre>
   },
 };
 
+// ============================================================ Conectar con Amazon
+const LOCALES = [["es-ES", "Español (España)"], ["es-MX", "Español (México)"], ["es-US", "Español (EE. UU.)"], ["en-US", "Inglés (EE. UU.)"], ["en-GB", "Inglés (Reino Unido)"]];
+function copy(text) { navigator.clipboard?.writeText(text).then(() => toast("Copiado")); }
+const copyRow = (v) => `<div class="copyrow"><code>${esc(v)}</code><button class="btn small" data-copy="${esc(v)}">Copiar</button></div>`;
+let amzTimer = null, amzWaitingLogin = false;
+
+async function drawAmazon() {
+  clearTimeout(amzTimer);
+  const box = document.getElementById("amz"); if (!box) return;
+  let a; try { a = await api("/api/amazon"); } catch (e) { return; }
+  const j = a.job || {};
+  const steps = j.steps || [];
+  const locBoxes = `<div class="locales">${LOCALES.map(([k, n]) => `<label class="check"><input type="checkbox" data-loc="${k}" ${a.locales.includes(k) ? "checked" : ""}> ${n}</label>`).join("")}</div>`;
+  const progress = steps.length || j.error ? `<div class="amz-log">${steps.map((x, i) => { const now = i === steps.length - 1 && j.running; return `<div class="${now ? "now" : "done"}">${now ? '<span class="spin"></span>' : "✔"} ${esc(x.text)}</div>`; }).join("")}${j.error ? `<div class="err">✖ ${esc(j.error)}</div>` : ""}</div>` : "";
+  let html;
+  if (!a.public_ok) {
+    html = `<p class="muted">Primero completa el paso 2: hace falta la URL pública <code>https://…</code>.</p>`;
+  } else if (!a.configured) {
+    html = `<p>Amazon pide que crees una vez un <b>perfil de seguridad</b>: es el permiso para que Local Media cree la skill en tu cuenta. Son 2 minutos:</p>
+    <ol class="sub">
+      <li>Abre <a href="https://developer.amazon.com/loginwithamazon/console/site/lwa/overview.html" target="_blank" rel="noopener">Login with Amazon</a> con la misma cuenta de Amazon que tus Echo y pulsa <b>Create a New Security Profile</b>.</li>
+      <li>Rellena <b>Name</b>: <code>Local Media</code>, <b>Description</b>: <code>Mi música en Alexa</code>, y en <b>Consent Privacy Notice URL</b> pega:${copyRow(a.privacy_url)}Pulsa <b>Save</b>.</li>
+      <li>En el perfil nuevo abre <b>Web Settings</b> → <b>Edit</b>, y en <b>Allowed Return URLs</b> pega:${copyRow(a.redirect_uri)}Pulsa <b>Save</b>.</li>
+      <li>En esa misma pantalla están el <b>Client ID</b> y el <b>Client Secret</b> (pulsa <i>Show Secret</i>). Pégalos aquí:</li>
+    </ol>
+    <label class="f">Client ID</label><input type="text" id="lwaId" placeholder="amzn1.application-oa2-client.…" value="${esc(a.client_id || "")}">
+    <label class="f">Client Secret</label><input type="password" id="lwaSecret" placeholder="amzn1.oa2-cs.v1.…" autocomplete="off">
+    <div class="actions"><button class="btn primary" id="lwaSave">Guardar</button></div>`;
+  } else if (!a.connected) {
+    html = `<p>Elige los idiomas de tus Echo y pulsa el botón. Se abrirá Amazon para que inicies sesión y des permiso.</p>${locBoxes}
+    <div class="actions"><button class="btn amazon" id="amzConnect">CONECTAR CON AMAZON</button></div>
+    ${amzWaitingLogin ? `<p class="hint"><span class="spin"></span> Esperando a que inicies sesión en la pestaña de Amazon…</p>` : ""}${progress}
+    <p class="hint">¿Te equivocaste con el Client ID o el Secret? <a href="javascript:void 0" id="lwaReset">Cambiarlos</a></p>`;
+  } else {
+    const done = !j.running && a.skill_id && !j.error && steps.length;
+    html = `<div class="row"><span class="pill ok">✔ Conectado</span><span class="muted">${esc(a.vendor_name || "tu cuenta de Amazon")}</span></div>
+    ${a.skill_id ? `<p class="hint">Tu skill: <code>${esc(a.skill_id)}</code> · <a href="https://developer.amazon.com/alexa/console/ask" target="_blank" rel="noopener">verla en Amazon</a></p>` : ""}
+    ${progress}
+    ${done ? `<p class="ok" style="font-size:17px">Ya puedes decir: <b>“Alexa, abre mi colección”</b></p>` : ""}
+    <label class="f">Idiomas de la skill</label>${locBoxes}
+    <label class="check"><input type="checkbox" id="amzAuto" ${a.auto_model ? "checked" : ""}> Actualizar el modelo de voz tras cada escaneo si cambia la biblioteca</label>
+    <div class="actions"><button class="btn primary" id="amzSetup" ${j.running ? "disabled" : ""}>${a.skill_id ? "🔄 Volver a configurar la skill" : "Crear mi skill"}</button>
+    <button class="btn" id="amzModel" ${j.running || !a.skill_id ? "disabled" : ""}>🗣 Actualizar modelo de voz</button>
+    <button class="btn danger" id="amzOff" ${j.running ? "disabled" : ""}>Desconectar</button></div>`;
+  }
+  box.innerHTML = html;
+  box.querySelectorAll("[data-copy]").forEach((b) => b.onclick = () => copy(b.dataset.copy));
+  const saveLocales = () => api("/api/amazon/settings", { method: "POST", body: { locales: [...box.querySelectorAll("[data-loc]:checked")].map((x) => x.dataset.loc) } });
+  box.querySelectorAll("[data-loc]").forEach((x) => x.onchange = saveLocales);
+  const on = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
+  on("lwaSave", async () => {
+    const id = $("#lwaId").value.trim(), sec = $("#lwaSecret").value.trim();
+    if (!id.startsWith("amzn1.application-oa2-client.")) return toast("El Client ID empieza por amzn1.application-oa2-client.");
+    if (!sec) return toast("Falta el Client Secret");
+    await api("/api/amazon/settings", { method: "POST", body: { client_id: id, client_secret: sec } }); drawAmazon();
+  });
+  on("lwaReset", async () => { await api("/api/amazon/settings", { method: "POST", body: { client_id: "" } }); drawAmazon(); });
+  on("amzConnect", async () => {
+    const w = window.open("about:blank", "_blank");
+    const r = await fetch("/api/amazon/login").then((x) => x.json()).catch(() => ({ error: "No se pudo contactar con Local Media" }));
+    if (r.url) { if (w) w.location = r.url; else location.href = r.url; amzWaitingLogin = true; drawAmazon(); }
+    else { if (w) w.close(); toast(r.error || "No se pudo abrir Amazon"); }
+  });
+  on("amzSetup", async () => { await saveLocales(); await api("/api/amazon/setup", { method: "POST", body: {} }); drawAmazon(); });
+  on("amzModel", async () => { await api("/api/amazon/update-model", { method: "POST", body: {} }); drawAmazon(); });
+  on("amzOff", async () => { if (confirm("¿Desconectar de Amazon? Tu skill seguirá funcionando; solo dejará de actualizarse sola.")) { await api("/api/amazon/disconnect", { method: "POST", body: {} }); drawAmazon(); } });
+  const au = document.getElementById("amzAuto"); if (au) au.onchange = () => api("/api/amazon/settings", { method: "POST", body: { auto_model: au.checked } });
+  if (a.connected) amzWaitingLogin = false;
+  if (j.running || amzWaitingLogin) amzTimer = setTimeout(drawAmazon, 2000);
+}
+
 function sayings() {
   const s = ["Alexa, abre mi colección", "Alexa, pide a mi colección que ponga Queen", "Alexa, pide a mi colección que ponga música de Estopa", "Alexa, pide a mi colección que ponga el álbum Thriller", "Alexa, pide a mi colección que ponga la canción Bohemian Rhapsody", "Alexa, pide a mi colección que ponga la lista Viaje", "Alexa, pide a mi colección que ponga música rock", "Alexa, pide a mi colección que ponga música de los ochenta", "Alexa, pide a mi colección que ponga música del 1995", "Alexa, pide a mi colección que ponga la carpeta Vinilos", "Alexa, pide a mi colección que ponga toda mi música", "Alexa, pide a mi colección que ponga mis favoritas", "Alexa, pide a mi colección que ponga lo último que he añadido", "Alexa, pide a mi colección que ponga lo más escuchado", "Alexa, pide a mi colección qué está sonando", "Alexa, pide a mi colección que ponga más de este artista", "Alexa, pide a mi colección que ponga este álbum", "Alexa, siguiente / anterior / pausa / continúa", "Alexa, aleatorio / quita el aleatorio", "Alexa, repite / desactiva la repetición", "Alexa, vuelve a empezar"];
   return s.map((x) => `<div>🗣 ${esc(x)}</div>`).join("");
@@ -446,6 +521,24 @@ async function pollScan() {
     if (sc.running) pollScan.wasRunning = true;
   } catch (e) { }
 }
+
+// ============================================================ tema (auto / oscuro / claro)
+const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
+function getTheme() { try { return localStorage.getItem("lm-theme") || "auto"; } catch (e) { return "auto"; } }
+function applyTheme(t) {
+  if (t === "dark" || t === "light") document.documentElement.dataset.theme = t;
+  else delete document.documentElement.dataset.theme;
+  try { t === "auto" ? localStorage.removeItem("lm-theme") : localStorage.setItem("lm-theme", t); } catch (e) { }
+  const effective = t === "auto" ? (darkQuery.matches ? "dark" : "light") : t;
+  document.querySelectorAll("[data-theme-set]").forEach((b) => b.classList.toggle("on", b.dataset.themeSet === t));
+  $("#themeBtn").textContent = effective === "dark" ? "🌙" : "☀️";
+  $('meta[name="theme-color"]').content = effective === "dark" ? "#161922" : "#ffffff";
+}
+document.querySelectorAll("[data-theme-set]").forEach((b) => b.onclick = () => applyTheme(b.dataset.themeSet));
+// en el movil el boton alterna entre oscuro y claro
+$("#themeBtn").onclick = () => { const cur = document.documentElement.dataset.theme || (darkQuery.matches ? "dark" : "light"); applyTheme(cur === "dark" ? "light" : "dark"); };
+darkQuery.addEventListener?.("change", () => { if (getTheme() === "auto") applyTheme("auto"); });
+applyTheme(getTheme());
 
 // ============================================================ router
 async function route() {

@@ -171,6 +171,7 @@ class Library:
                        "started": None, "finished": None}
         self._scan_lock = threading.Lock()
         self._names_cache = None
+        self.on_scan_done = None  # lo pone __main__ (subir el modelo de voz a Amazon)
 
     # ------------------------------------------------------------ escaneo
     def start_scan(self, full=False):
@@ -199,6 +200,11 @@ class Library:
                 self._names_cache = None
                 st.update(running=False, phase="", finished=time.time())
                 self.db.meta_set("last_scan", time.time())
+            if self.on_scan_done and not st["error"]:
+                try:
+                    self.on_scan_done()
+                except Exception:
+                    log.exception("Tras el escaneo")
 
     def _scan(self, full):
         st = self.status
@@ -727,7 +733,7 @@ class Library:
         albums = sorted({a["name"] for a in n["albums"] if a["name"]})
         titles = [r["title"] for r in self.db.q(
             "SELECT title FROM tracks LEFT JOIN plays ON plays.track_id=tracks.id "
-            "GROUP BY n_title ORDER BY COALESCE(MAX(plays.count),0) DESC, RANDOM() LIMIT ?",
+            "GROUP BY n_title ORDER BY COALESCE(MAX(plays.count),0) DESC, n_title LIMIT ?",
             (limit,))]
         folders = sorted({os.path.basename(f) for f in self.folder_names()})
         return {

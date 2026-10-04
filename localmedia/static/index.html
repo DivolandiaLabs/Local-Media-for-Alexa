@@ -7,6 +7,10 @@
 <link rel="icon" href="/static/cover.svg">
 <link rel="stylesheet" href="/static/style.css">
 <meta name="theme-color" content="#14161c">
+<script>
+  // aplica el tema guardado antes de pintar (sin parpadeo)
+  try { var t = localStorage.getItem("lm-theme"); if (t === "dark" || t === "light") document.documentElement.dataset.theme = t; } catch (e) {}
+</script>
 </head>
 <body>
 <div id="login" class="login hidden">
@@ -37,11 +41,19 @@
       <a href="#/setup" data-nav="setup">🧭 Configurar Alexa</a>
       <a href="#/settings" data-nav="settings">⚙️ Ajustes</a>
     </nav>
-    <div id="scanBadge" class="scan-badge hidden"></div>
+    <div class="side-foot">
+      <div id="scanBadge" class="scan-badge hidden"></div>
+      <div class="theme-switch" role="group" aria-label="Tema">
+        <button data-theme-set="auto" title="Seguir al sistema">🖥 Auto</button>
+        <button data-theme-set="dark" title="Modo oscuro">🌙 Oscuro</button>
+        <button data-theme-set="light" title="Modo claro">☀️ Claro</button>
+      </div>
+    </div>
   </aside>
   <header class="topbar">
     <button id="menuBtn" class="icon-btn" aria-label="Menú">☰</button>
     <span class="brand small"><img src="/static/cover.svg" alt="" width="22" height="22"> Local Media</span>
+    <button id="themeBtn" class="icon-btn theme-btn" aria-label="Cambiar tema" title="Cambiar tema">🌙</button>
   </header>
   <main id="main" class="main"></main>
 

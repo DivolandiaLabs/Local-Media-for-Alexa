@@ -32,7 +32,7 @@ def _art_response(lib, tid):
 
 
 # ======================================================================= publica
-def make_public_app(cfg, lib, skill):
+def make_public_app(cfg, lib, skill, amazon=None):
     app = Flask("localmedia_public")
 
     @app.get("/")
@@ -81,11 +81,48 @@ def make_public_app(cfg, lib, skill):
             abort(404)
         return _art_response(lib, tid)
 
+    @app.get("/privacidad")
+    def privacy():
+        return _simple_page("Privacidad", "Local Media es una skill privada que reproduce la "
+                            "música de tu propia Raspberry Pi. No recoge, vende ni comparte datos "
+                            "personales: todo se queda en tu equipo.")
+
+    @app.get("/amazon/callback")
+    def amazon_callback():
+        """Vuelta de Login with Amazon (tiene que ser https, por eso va en el puerto publico)."""
+        if amazon is None:
+            abort(404)
+        from .amazon import AmazonError
+        try:
+            amazon.callback(request.args.get("code"), request.args.get("state"),
+                            request.args.get("error"))
+        except AmazonError as e:
+            return _simple_page("No se ha podido conectar", str(e), ok=False), 400
+        amazon.start_setup()
+        return _simple_page("Conectado con Amazon",
+                            "Local Media está creando tu skill. Puedes cerrar esta pestaña y "
+                            "volver a la web de Local Media para ver cómo avanza.")
+
     return app
 
 
+def _simple_page(title, text, ok=True):
+    from html import escape
+    color = "#34d399" if ok else "#f87171"
+    return f"""<!doctype html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1"><title>{escape(title)}</title>
+<style>:root{{--bg:#0f1117;--panel:#161922;--text:#e8eaf0;--muted:#9aa1b2}}
+@media (prefers-color-scheme: light){{:root{{--bg:#f4f5f8;--panel:#fff;--text:#1a1d26;--muted:#5f677a}}}}
+body{{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+background:var(--bg);color:var(--text);font:16px/1.5 system-ui,sans-serif;padding:16px}}
+.box{{background:var(--panel);border-radius:16px;padding:28px;max-width:460px;text-align:center}}
+h1{{font-size:22px;color:{color}}}p{{color:var(--muted)}}</style></head>
+<body><div class="box"><h1>{"✔" if ok else "✖"} {escape(title)}</h1><p>{escape(text)}</p>
+</div></body></html>"""
+
+
 # ======================================================================= red local
-def make_lan_app(cfg, lib, skill):
+def make_lan_app(cfg, lib, skill, amazon=None):
     app = Flask("localmedia_lan", static_folder=None)
     app.secret_key = ("localmedia-" + cfg["secret"]).encode()
     app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
@@ -100,6 +137,14 @@ def make_lan_app(cfg, lib, skill):
             return None
         if session.get("ok") != _pw_tag(pw):
             return jsonify(error="auth"), 401
+
+    @app.after_request
+    def no_cache_api(resp):
+        # el estado (escaneo, Amazon, dispositivos) cambia a cada momento: nunca de cache
+        if request.path.startswith("/api/") and not request.path.startswith(("/api/art/",
+                                                                             "/api/stream/")):
+            resp.headers["Cache-Control"] = "no-store"
+        return resp
 
     @app.get("/")
     def index():
@@ -149,8 +194,10 @@ def make_lan_app(cfg, lib, skill):
     @app.post("/api/config")
     def set_config():
         data = dict(request.json or {})
-        if data.get("web_password") == "********":
-            data.pop("web_password")
+        for k in ("web_password", "lwa_client_secret"):
+            if data.get(k) == "********":
+                data.pop(k)
+        data.pop("amazon", None)  # los tokens solo los toca el modulo de Amazon
         if "music_folders" in data:
             data["music_folders"] = [f.strip() for f in data["music_folders"] if f.strip()]
         if "skill_ids" in data:
@@ -399,6 +446,52 @@ def make_lan_app(cfg, lib, skill):
         return Response(json.dumps(skillmodel.manifest(cfg.public_base()), ensure_ascii=False,
                                    indent=2), mimetype="application/json", headers={
             "Content-Disposition": 'attachment; filename="skill.json"'})
+
+    # ------------------------------------------------------------ Conectar con Amazon
+    from .amazon import AmazonError
+
+    @app.get("/api/amazon")
+    def amazon_state():
+        return jsonify(amazon.state())
+
+    @app.post("/api/amazon/settings")
+    def amazon_settings():
+        d = request.json or {}
+        ch = {}
+        if "client_id" in d:
+            ch["lwa_client_id"] = d["client_id"].strip()
+        if d.get("client_secret") and d["client_secret"] != "********":
+            ch["lwa_client_secret"] = d["client_secret"].strip()
+        if "locales" in d:
+            ch["skill_locales"] = [l for l in d["locales"] if l in skillmodel.ALL_LOCALES]                 or ["es-ES"]
+        if "auto_model" in d:
+            ch["amazon_auto_model"] = bool(d["auto_model"])
+        cfg.update(ch)
+        return jsonify(amazon.state())
+
+    @app.get("/api/amazon/login")
+    def amazon_login():
+        try:
+            return jsonify(url=amazon.login_url())
+        except AmazonError as e:
+            return jsonify(error=str(e)), 400
+
+    @app.post("/api/amazon/setup")
+    def amazon_setup():
+        if not amazon.connected():
+            return jsonify(error="No estás conectado con Amazon."), 400
+        return jsonify(started=amazon.start_setup(), state=amazon.state())
+
+    @app.post("/api/amazon/update-model")
+    def amazon_update_model():
+        if not amazon.connected():
+            return jsonify(error="No estás conectado con Amazon."), 400
+        return jsonify(started=amazon.start_model_update(), state=amazon.state())
+
+    @app.post("/api/amazon/disconnect")
+    def amazon_disconnect():
+        amazon.disconnect()
+        return jsonify(amazon.state())
 
     # ------------------------------------------------------------ UPnP
     @app.get("/api/upnp/discover")
