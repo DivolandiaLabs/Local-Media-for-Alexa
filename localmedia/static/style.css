@@ -126,8 +126,9 @@ input[type=range]{accent-color:var(--accent)}
 }
 /* selector de tema */
 .theme-switch{display:flex;gap:4px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px}
-.theme-switch button{flex:1;border:0;background:none;border-radius:999px;padding:5px 8px;cursor:pointer;font-size:13px;color:var(--muted)}
+.theme-switch button{flex:1;border:0;background:none;border-radius:999px;padding:5px 4px;cursor:pointer;font-size:13px;color:var(--muted)}
 .theme-switch button.on{background:var(--panel);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.theme-switch button span{white-space:nowrap}
 .topbar .theme-btn{margin-left:auto}
 /* Conectar con Amazon */
 .btn.amazon{background:#ff9900;color:#111;border:0;font-weight:700;letter-spacing:.3px;padding:12px 22px;font-size:15px}
@@ -204,3 +205,13 @@ a.stat.link:hover .go,a.stat.link:focus-visible .go{color:var(--accent)}
 body.out-echo .np-sub{color:var(--accent)}
 @media (max-width:860px){.out-btn{max-width:150px}}
 @media (max-width:420px){.out-lb{display:none}}
+/* selector de idioma */
+.lang-wrap{display:flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+.lang-sel{flex:1;min-width:0;border:0;background:transparent;color:var(--text);font:inherit;font-size:13px;padding:4px 0;cursor:pointer}
+.lang-sel option{background:var(--panel);color:var(--text)}
+@media (min-width:861px){html.side-collapsed .side .lang-wrap{display:none}}
+/* selector de idioma */
+.lang-wrap{display:flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:3px 10px}
+.lang-sel{flex:1;min-width:0;border:0;background:transparent;color:var(--text);font:inherit;font-size:13px;padding:4px 0;cursor:pointer}
+.lang-sel option{background:var(--panel);color:var(--text)}
+@media (min-width:861px){html.side-collapsed .side .lang-wrap{display:none}}

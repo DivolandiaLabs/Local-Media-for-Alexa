@@ -18,8 +18,8 @@
   <form id="loginForm" class="login-box">
     <img src="/static/cover.svg" alt="" width="64" height="64">
     <h1>Local Media <span class="brand-sub">for Alexa</span></h1>
-    <input type="password" id="loginPw" placeholder="Contraseña" autocomplete="current-password">
-    <button class="btn primary" type="submit">Entrar</button>
+    <input type="password" id="loginPw" placeholder="Contraseña" data-i18n-ph="Contraseña" autocomplete="current-password">
+    <button class="btn primary" type="submit" data-i18n="Entrar">Entrar</button>
     <p id="loginErr" class="err"></p>
   </form>
 </div>
@@ -28,36 +28,37 @@
   <aside id="side" class="side">
     <div class="brand"><img src="/static/cover.svg" alt="" width="28" height="28"> <span class="lb">Local Media <span class="brand-sub">for Alexa</span></span>
       <button type="button" id="sideToggle" class="side-toggle" aria-label="Recoger el menú" title="Recoger el menú">«</button></div>
-    <form id="searchForm" class="search"><input id="searchBox" type="search" placeholder="Buscar en tu música…"></form>
+    <form id="searchForm" class="search"><input id="searchBox" type="search" placeholder="Buscar en tu música…" data-i18n-ph="Buscar en tu música…"></form>
     <nav>
-      <a href="#/" data-nav="home" title="Inicio"><span class="ic">🏠</span><span class="lb">Inicio</span></a>
-      <a href="#/artists" data-nav="artists" title="Artistas"><span class="ic">🎤</span><span class="lb">Artistas</span></a>
-      <a href="#/albums" data-nav="albums" title="Álbumes"><span class="ic">💿</span><span class="lb">Álbumes</span></a>
-      <a href="#/tracks" data-nav="tracks" title="Canciones"><span class="ic">🎵</span><span class="lb">Canciones</span></a>
-      <a href="#/genres" data-nav="genres" title="Géneros"><span class="ic">🎸</span><span class="lb">Géneros</span></a>
-      <a href="#/folders" data-nav="folders" title="Carpetas"><span class="ic">📁</span><span class="lb">Carpetas</span></a>
-      <a href="#/playlists" data-nav="playlists" title="Listas"><span class="ic">📜</span><span class="lb">Listas</span></a>
-      <a href="#/favorites" data-nav="favorites" title="Favoritas"><span class="ic">⭐</span><span class="lb">Favoritas</span></a>
-      <a href="#/radios" data-nav="radios" title="Radios"><span class="ic">📻</span><span class="lb">Radios</span></a>
+      <a href="#/" data-nav="home" data-i18n-title="Inicio"><span class="ic">🏠</span><span class="lb" data-i18n="Inicio">Inicio</span></a>
+      <a href="#/artists" data-nav="artists" data-i18n-title="Artistas"><span class="ic">🎤</span><span class="lb" data-i18n="Artistas">Artistas</span></a>
+      <a href="#/albums" data-nav="albums" data-i18n-title="Álbumes"><span class="ic">💿</span><span class="lb" data-i18n="Álbumes">Álbumes</span></a>
+      <a href="#/tracks" data-nav="tracks" data-i18n-title="Canciones"><span class="ic">🎵</span><span class="lb" data-i18n="Canciones">Canciones</span></a>
+      <a href="#/genres" data-nav="genres" data-i18n-title="Géneros"><span class="ic">🎸</span><span class="lb" data-i18n="Géneros">Géneros</span></a>
+      <a href="#/folders" data-nav="folders" data-i18n-title="Carpetas"><span class="ic">📁</span><span class="lb" data-i18n="Carpetas">Carpetas</span></a>
+      <a href="#/playlists" data-nav="playlists" data-i18n-title="Listas"><span class="ic">📜</span><span class="lb" data-i18n="Listas">Listas</span></a>
+      <a href="#/favorites" data-nav="favorites" data-i18n-title="Favoritas"><span class="ic">⭐</span><span class="lb" data-i18n="Favoritas">Favoritas</span></a>
+      <a href="#/radios" data-nav="radios" data-i18n-title="Radios"><span class="ic">📻</span><span class="lb" data-i18n="Radios">Radios</span></a>
       <div class="sep"></div>
       <a href="#/alexa" data-nav="alexa" title="Alexa"><span class="ic">🔊</span><span class="lb">Alexa</span></a>
-      <a href="#/setup" data-nav="setup" title="Configurar Alexa"><span class="ic">🧭</span><span class="lb">Configurar Alexa</span></a>
-      <a href="#/settings" data-nav="settings" title="Ajustes"><span class="ic">⚙️</span><span class="lb">Ajustes</span></a>
+      <a href="#/setup" data-nav="setup" data-i18n-title="Configurar Alexa"><span class="ic">🧭</span><span class="lb" data-i18n="Configurar Alexa">Configurar Alexa</span></a>
+      <a href="#/settings" data-nav="settings" data-i18n-title="Ajustes"><span class="ic">⚙️</span><span class="lb" data-i18n="Ajustes">Ajustes</span></a>
     </nav>
     <div class="side-foot">
       <div id="scanBadge" class="scan-badge hidden"></div>
+      <label class="lang-wrap"><span aria-hidden="true">🌐</span><select id="langSel" class="lang-sel" aria-label="Idioma" data-i18n-title="Idioma"></select></label>
       <div class="theme-switch" role="group" aria-label="Tema">
-        <button data-theme-set="auto" title="Seguir al sistema">🖥 Auto</button>
-        <button data-theme-set="dark" title="Modo oscuro">🌙 Oscuro</button>
-        <button data-theme-set="light" title="Modo claro">☀️ Claro</button>
+        <button data-theme-set="auto" data-i18n-title="Seguir al sistema">🖥 <span data-i18n="Auto">Auto</span></button>
+        <button data-theme-set="dark" data-i18n-title="Modo oscuro">🌙 <span data-i18n="Oscuro">Oscuro</span></button>
+        <button data-theme-set="light" data-i18n-title="Modo claro">☀️ <span data-i18n="Claro">Claro</span></button>
       </div>
     </div>
   </aside>
   <div id="sideBackdrop" class="side-backdrop" hidden></div>
   <header class="topbar">
-    <button id="menuBtn" class="icon-btn" aria-label="Menú">☰</button>
+    <button id="menuBtn" class="icon-btn" aria-label="Menú" data-i18n-title="Menú">☰</button>
     <span class="brand small"><img src="/static/cover.svg" alt="" width="22" height="22"> <span>Local Media <span class="brand-sub">for Alexa</span></span></span>
-    <button id="themeBtn" class="icon-btn theme-btn" aria-label="Cambiar tema" title="Cambiar tema">🌙</button>
+    <button id="themeBtn" class="icon-btn theme-btn" aria-label="Cambiar tema" data-i18n-title="Cambiar tema">🌙</button>
   </header>
   <main id="main" class="main"></main>
 
@@ -68,18 +69,18 @@
     </div>
     <div class="controls">
       <div class="buttons">
-        <button id="pShuffle" class="icon-btn" title="Aleatorio">🔀</button>
-        <button id="pPrev" class="icon-btn" title="Anterior">⏮</button>
-        <button id="pPlay" class="icon-btn big" title="Reproducir">▶</button>
-        <button id="pNext" class="icon-btn" title="Siguiente">⏭</button>
-        <button id="pLoop" class="icon-btn" title="Repetir">🔁</button>
+        <button id="pShuffle" class="icon-btn" data-i18n-title="Aleatorio">🔀</button>
+        <button id="pPrev" class="icon-btn" data-i18n-title="Anterior">⏮</button>
+        <button id="pPlay" class="icon-btn big" data-i18n-title="Reproducir">▶</button>
+        <button id="pNext" class="icon-btn" data-i18n-title="Siguiente">⏭</button>
+        <button id="pLoop" class="icon-btn" data-i18n-title="Repetir">🔁</button>
       </div>
       <div class="seek"><span id="pCur">0:00</span><input id="pSeek" type="range" min="0" max="1000" value="0"><span id="pDur">0:00</span></div>
     </div>
     <div class="extra">
-      <button id="pQueue" class="icon-btn" title="Cola">☰</button>
+      <button id="pQueue" class="icon-btn" data-i18n-title="Cola">☰</button>
       <button id="pOut" class="out-btn" type="button" title="Elegir dónde suena" aria-haspopup="dialog"><span id="pOutIc">💻</span><span id="pOutLb" class="out-lb">Este navegador</span><span class="out-caret">▾</span></button>
-      <input id="pVol" type="range" min="0" max="100" value="90" title="Volumen">
+      <input id="pVol" type="range" min="0" max="100" value="90" data-i18n-title="Volumen">
     </div>
     <audio id="audio" preload="auto"></audio>
   </footer>
@@ -87,6 +88,16 @@
 
 <div id="modal" class="modal hidden"><div class="modal-box"><button class="icon-btn modal-x" id="modalX">✕</button><div id="modalBody"></div></div></div>
 <div id="toast" class="toast hidden"></div>
+<script src="/static/i18n.js"></script>
+<script src="/static/i18n/en.js"></script>
+<script src="/static/i18n/pt.js"></script>
+<script src="/static/i18n/fr.js"></script>
+<script src="/static/i18n/de.js"></script>
+<script src="/static/i18n/it.js"></script>
+<script src="/static/i18n/pl.js"></script>
+<script src="/static/i18n/ru.js"></script>
+<script src="/static/i18n/ko.js"></script>
+<script src="/static/i18n/ja.js"></script>
 <script src="/static/app.js"></script>
 </body>
 </html>

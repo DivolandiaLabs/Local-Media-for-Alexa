@@ -1,17 +1,34 @@
 # Local Media for Alexa — tu música de la Raspberry Pi en Alexa
 
+**Español** · [English](README.en.md) · [Português](README.pt.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Italiano](README.it.md) · [Polski](README.pl.md) · [Русский](README.ru.md) · [한국어](README.ko.md) · [日本語](README.ja.md)
+
 Alternativa libre y autoalojada a *My Media for Alexa* para **Raspberry Pi / Linux ARM**
 (funciona también en cualquier Linux x86 o con Docker).
 Escanea tu música (disco USB, tarjeta SD, NAS montado o servidores DLNA) y la reproduce
-en tus Echo con la voz.
+en tus Echo con la voz. Todo se queda en tu casa: no hay servidores intermedios ni cuentas de terceros.
+
+![Inicio de Local Media](docs/screenshots/es-home.png)
 
 ```
 "Alexa, abre mi colección"
 "Alexa, pide a mi colección que ponga Queen"
 "Alexa, pide a mi colección que ponga el disco Abbey Road"
+"Alexa, abre mi colección reproduzca la pista Bohemian Rhapsody"
 "Alexa, pide a mi colección que ponga música de los ochenta"
 "Alexa, siguiente" · "Alexa, aleatorio" · "Alexa, pide a mi colección qué está sonando"
 ```
+
+## Un vistazo a la web
+
+La web de gestión se abre desde el móvil o el PC de casa (`http://IP-DE-LA-PI:8080`).
+Está traducida a 10 idiomas (selector 🌐 abajo a la izquierda) y tiene modo claro y oscuro.
+
+| | |
+|---|---|
+| ![Álbum en modo oscuro](docs/screenshots/es-album.png) | ![Elegir dónde suena](docs/screenshots/es-output.png) |
+| **Explora tu biblioteca** por artistas, álbumes, canciones, géneros, carpetas, listas y radios. Cada pista tiene favorita ⭐ y menú ⋯ (siguiente, a la cola, a una lista…). | **Reproducir en…**: suena en el navegador o se prepara en el Echo que elijas. Luego basta con decir *“Alexa, abre mi colección”*. |
+| ![Tus Echo](docs/screenshots/es-echo.png) | ![Configurar Alexa](docs/screenshots/es-setup.png) |
+| **Alexa**: tus Echo, qué suena en cada uno y su cola. Ponles nombre. Debajo, todas las frases que puedes decir. | **Configurar Alexa**: guía paso a paso. Con el botón *Conectar con Amazon* la skill se crea sola. |
 
 ## Instalación en la Raspberry Pi
 
@@ -22,26 +39,29 @@ sudo apt update && sudo apt install -y git
 git clone https://github.com/DivolandiaLabs/Local-Media-for-Alexa.git
 cd Local-Media-for-Alexa
 chmod +x install.sh
-./install.sh
+./install.sh --cloudflare
 ```
 
 Opciones del instalador:
 
 ```bash
 ./install.sh --music /media/pi/USB/Musica   # añade ya una carpeta de música
-./install.sh --tunnel                       # instala también cloudflared (HTTPS para Alexa)
+./install.sh --cloudflare                   # túnel rápido de Cloudflare: HTTPS gratis para Alexa (recomendado)
+./install.sh --tunnel                       # solo instala cloudflared (túnel con dominio propio)
 ```
 
 Abre `http://IP-DE-LA-PI:8080` desde el móvil o el PC:
 
-* **Ajustes** → añade carpetas → **Escanear ahora**.
-* **Configurar Alexa** → guía paso a paso (unos 10 minutos, solo una vez).
+1. **Ajustes** → añade carpetas → **Escanear ahora**.
+2. **Configurar Alexa** → guía paso a paso (unos 10 minutos, solo una vez).
 
 Actualizar a la última versión:
 
 ```bash
 cd ~/Local-Media-for-Alexa && git pull && ./install.sh
 ```
+
+Después, en **Configurar Alexa**, pulsa **🗣 Actualizar modelo de voz** para que la skill reciba las frases nuevas.
 
 Con Docker: mira las instrucciones al principio del [Dockerfile](Dockerfile).
 
@@ -98,11 +118,11 @@ cd ~/Local-Media-for-Alexa && ./install.sh
 | Servidores UPnP / DLNA (NAS, Plex, Jellyfin, MiniDLNA…) | ✅ |
 | Varios Echo, cada uno con su cola | ✅ |
 | Grupos multisala de Alexa | ✅ (los gestiona Alexa) |
-| Web para explorar la biblioteca | ✅ + reproductor en el navegador |
-| Preparar una cola en la web y mandarla a un Echo | ✅ "Enviar a Alexa" |
+| Web para explorar la biblioteca | ✅ + reproductor en el navegador, modo oscuro, 10 idiomas |
+| Preparar una cola en la web y mandarla a un Echo | ✅ selector "Reproducir en…" |
 | Reescaneo automático | ✅ incremental, cada N minutos |
-| Acceso remoto | ✅ Cloudflare Tunnel / ngrok / Caddy (sin servidores intermedios de terceros) |
-| Español e inglés | ✅ es-ES, es-MX, es-US, en-US, en-GB… |
+| Acceso remoto | ✅ Cloudflare Tunnel / Caddy (sin servidores intermedios de terceros) |
+| Idiomas de la skill (voz) | ✅ es-ES, es-MX, es-US, en-US, en-GB |
 
 ## Cómo encaja todo
 
@@ -115,13 +135,15 @@ Tú (móvil/PC, en casa) ──────────────────�
 * El **puerto 8765** es el único que sale a Internet: solo atiende a Alexa (con la firma
   de Amazon comprobada) y sirve audio y carátulas tras una clave secreta aleatoria.
 * El **puerto 8080** (la web) se queda en tu red local. Puedes ponerle contraseña.
-* Alexa exige HTTPS con un certificado válido, por eso hace falta el túnel o un proxy.
-  La opción más sencilla y gratuita es Cloudflare Tunnel con un dominio propio.
+* Alexa exige HTTPS con un certificado válido, por eso hace falta un túnel o un proxy.
+  La opción más sencilla es el túnel rápido de Cloudflare (`./install.sh --cloudflare`):
+  gratis, sin cuenta ni dominio. Su dirección cambia al reiniciar, pero Local Media la
+  detecta y actualiza la skill sola.
 
 ## La skill de Alexa
 
 Es una skill **privada en modo desarrollo**: no se publica, es gratis y funciona en todos
-los Echo de tu cuenta. La web genera el modelo de voz **con los nombres de tu biblioteca**
+los Echo de tu cuenta. Local Media genera el modelo de voz **con los nombres de tu biblioteca**
 para que Alexa los reconozca mejor. En [skill/](skill) hay también un modelo genérico y
 el manifiesto `skill.json` (para `ask-cli`).
 
@@ -148,8 +170,15 @@ funcionando.
 Nombre de invocación: **"mi colección"** (en inglés *"my collection"*). Se puede cambiar
 en la consola de Alexa (*Invocation*); Local Media no depende de él.
 
-Las skills de Alexa no pueden empezar a sonar por iniciativa propia: cuando mandas una cola
-desde la web, di *"Alexa, abre mi colección"* para que empiece.
+Las skills de Alexa no pueden empezar a sonar por iniciativa propia: cuando preparas una cola
+en un Echo desde la web, di *"Alexa, abre mi colección"* para que empiece.
+
+## Idiomas
+
+* **Web:** español, inglés, portugués, francés, alemán, italiano, polaco, ruso, coreano y japonés.
+  Se elige con el selector 🌐 (por defecto, el idioma del navegador).
+* **Voz (skill de Alexa):** español (España, México, EE. UU.) e inglés (EE. UU., Reino Unido).
+  Alexa no ofrece skills propias en coreano, ruso ni polaco.
 
 ## Problemas frecuentes
 
@@ -157,8 +186,9 @@ desde la web, di *"Alexa, abre mi colección"* para que empiece.
 |---|---|
 | "Hubo un problema con la respuesta de la skill solicitada" | Revisa `journalctl -u localmedia -f`. Si pone *peticion demasiado antigua*, la hora de la Pi está mal (`timedatectl`). |
 | Alexa dice la frase pero no suena | La URL pública no es accesible por HTTPS o no tiene certificado válido. Usa el botón *Guardar y probar* de la guía. |
+| Uso ngrok y Alexa no conecta | Los dominios gratuitos de ngrok no funcionan con Alexa. Usa `./install.sh --cloudflare`. |
 | No suenan los FLAC | Falta ffmpeg: `sudo apt install ffmpeg`. |
-| Alexa no entiende un nombre raro | Descarga de nuevo el modelo de voz (lleva tu biblioteca) y súbelo en la consola. |
+| Alexa no entiende un nombre raro | Pulsa **🗣 Actualizar modelo de voz** en *Configurar Alexa* (lleva tu biblioteca). |
 | No aparecen pistas de un NAS | Monta la carpeta compartida (`/etc/fstab`, CIFS/NFS) y añádela, o activa UPnP/DLNA en Ajustes. |
 
 Comandos útiles:
@@ -166,22 +196,25 @@ Comandos útiles:
 ```bash
 journalctl -u localmedia -f          # ver lo que pasa
 sudo systemctl restart localmedia    # reiniciar
-./uninstall.sh                    # quitar el servicio (no borra tu música)
+./uninstall.sh                       # quitar el servicio (no borra tu música)
 ```
 
 ## Archivos
 
 ```
-localmedia/             programa (Python 3.9+)
+localmedia/          programa (Python 3.9+)
   alexa.py           intents, colas por dispositivo, eventos del AudioPlayer
   alexa_verify.py    comprobación de firma y certificado de Amazon
+  amazon.py          Login with Amazon y creación automática de la skill
+  tunnel.py          sigue la dirección del túnel rápido de Cloudflare
   library.py         escaneo, etiquetas (mutagen), carátulas, listas, búsqueda
   media.py           envío de audio con saltos y conversión con ffmpeg
   upnp.py            cliente UPnP/DLNA
   skillmodel.py      genera el modelo de voz de la skill
   web.py             servidor público (Alexa) y web de gestión
-  static/            la web
+  static/            la web (static/i18n/ = traducciones)
 skill/               modelo de voz genérico y manifiesto de la skill
+docs/screenshots/    capturas de este README
 install.sh           instalador para Raspberry Pi OS / Debian
 ```
 
