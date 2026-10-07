@@ -143,6 +143,7 @@ Tu (telemóvel/PC, em casa) ─────────────────�
   A opção mais simples é o túnel rápido da Cloudflare (`./install.sh --cloudflare`):
   grátis, sem conta nem domínio. O endereço muda ao reiniciar, mas o Local Media
   deteta-o e atualiza a skill sozinho.
+* Se o túnel rápido ficar pendurado (a Cloudflare apaga o endereço mas o programa continua a correr), o Local Media nota: verifica o endereço a cada 5 minutos e, após 3 falhas seguidas, reinicia o túnel e envia o novo endereço à Amazon. Não gasta recursos apreciáveis.
 
 ## A skill da Alexa
 

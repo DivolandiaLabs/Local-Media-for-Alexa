@@ -143,6 +143,7 @@ Tu (telefono/PC, a casa) ──────────────────�
   L'opzione più semplice è il tunnel rapido Cloudflare (`./install.sh --cloudflare`):
   gratuito, senza account né dominio. Il suo indirizzo cambia al riavvio, ma Local Media
   lo rileva e aggiorna la skill da solo.
+* Se il tunnel rapido si blocca (Cloudflare cancella il suo indirizzo ma il programma resta in esecuzione), Local Media se ne accorge: controlla l'indirizzo ogni 5 minuti e, dopo 3 errori di fila, riavvia il tunnel e passa il nuovo indirizzo ad Amazon. Non consuma risorse apprezzabili.
 
 ## La skill di Alexa
 

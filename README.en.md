@@ -143,6 +143,7 @@ You (phone/PC, at home) ──────────────────�
   The easiest option is the Cloudflare quick tunnel (`./install.sh --cloudflare`):
   free, no account and no domain. Its address changes on reboot, but Local Media
   detects it and updates the skill by itself.
+* If the quick tunnel hangs (Cloudflare drops its address while the program keeps running), Local Media notices: it checks the address every 5 minutes and, after 3 failures in a row, restarts the tunnel and sends the new address to Amazon. It uses no noticeable resources.
 
 ## The Alexa skill
 

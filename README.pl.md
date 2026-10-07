@@ -143,6 +143,7 @@ Ty (telefon/PC, w domu) ──────────────────�
   Najprościej użyć szybkiego tunelu Cloudflare (`./install.sh --cloudflare`):
   za darmo, bez konta i bez domeny. Jego adres zmienia się po restarcie, ale Local Media
   sam go wykrywa i aktualizuje skill.
+* Jeśli szybki tunel się zawiesi (Cloudflare usuwa jego adres, a program nadal działa), Local Media to zauważy: sprawdza adres co 5 minut i po 3 kolejnych błędach uruchamia tunel ponownie i przekazuje nowy adres Amazonowi. Nie zużywa zauważalnie zasobów.
 
 ## Skill Alexy
 
